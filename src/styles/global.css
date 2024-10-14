@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  min-width: 0;
+}
+
+.customBasePadding {
+  @apply py-4 px-4 flex justify-center items-center;
+}
+.customBaseMargin {
+  @apply my-4 mx-6 justify-center items-center;
+}
+.translate-z-0 {
+  transform: translateZ(0px);
+}
+.swiper-horizontal > .swiper-pagination-bullets .swiper-pagination-bullet,
+.swiper-pagination-horizontal.swiper-pagination-bullets
+  .swiper-pagination-bullet {
+  background-color: #e24222;
+}
+
+.swiper-button-next:after,
+.swiper-button-prev:after,
+.swiper-button-next:after,
+.swiper-rtl .swiper-button-prev:after {
+  color: #e24222;
+}
+
+@layer base {
+  body {
+    @apply leading-relaxed font-poppins bg-white text-baseText text-sm overflow-x-hidden;
+  }
+
+  .container {
+    @apply mx-auto w-full max-w-[1200px] px-6;
+  }
+
+  *::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: #374151;
+    border-radius: 5px;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background-color: #e24222;
+    border-radius: 14px;
+    height: 2px;
+  }
+}
