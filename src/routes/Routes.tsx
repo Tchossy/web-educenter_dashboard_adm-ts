@@ -1,12 +1,19 @@
 import React from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { routsNameMain } from '../data/routsName'
-import RootLayout from '../Layout/RootLayout'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+
 import FourOhFour from '../pages/404'
 import Loading from '../pages/loading'
 
+// Layout
+import RootLayout from '../Layout/RootLayout'
+// Data Route
+import { routsNameMain } from '../data/routsName'
+// Route
+import { Private, PrivateLogin } from './PrivateRoute'
+
 import { Login } from '../pages/main/login'
 
+// Page
 import { Home } from '../pages/main/home'
 import { Admin } from '../pages/main/admin'
 import { Professor } from '../pages/main/professor'
@@ -26,21 +33,6 @@ import { TaskCreate } from '../pages/main/task/taskCreate'
 import { TaskCheck } from '../pages/main/task/taskCheck'
 
 // const Home = React.lazy(() => import('../pages/main/home'))
-
-type Props = {
-  children: JSX.Element
-}
-
-function PrivateLogin({ children }: Props) {
-  const user = null
-
-  if (user != null) {
-    return <Navigate to={'/'} />
-  }
-
-  return children
-}
-
 export function Router() {
   return (
     <BrowserRouter>
@@ -51,7 +43,9 @@ export function Router() {
             index
             element={
               <React.Suspense fallback={<Loading />}>
-                <Home />
+                <Private>
+                  <Home />
+                </Private>
               </React.Suspense>
             }
           />
@@ -60,7 +54,9 @@ export function Router() {
             path={routsNameMain.admin}
             element={
               <React.Suspense fallback={<Loading />}>
-                <Admin />
+                <Private>
+                  <Admin />
+                </Private>
               </React.Suspense>
             }
           />
@@ -70,7 +66,9 @@ export function Router() {
             path={routsNameMain.professor}
             element={
               <React.Suspense fallback={<Loading />}>
-                <Professor />
+                <Private>
+                  <Professor />
+                </Private>
               </React.Suspense>
             }
           />
@@ -79,7 +77,9 @@ export function Router() {
             path={routsNameMain.student}
             element={
               <React.Suspense fallback={<Loading />}>
-                <Student />
+                <Private>
+                  <Student />
+                </Private>
               </React.Suspense>
             }
           />
@@ -88,7 +88,9 @@ export function Router() {
             path={routsNameMain.course}
             element={
               <React.Suspense fallback={<Loading />}>
-                <Course />
+                <Private>
+                  <Course />
+                </Private>
               </React.Suspense>
             }
           />
@@ -97,7 +99,9 @@ export function Router() {
             path={routsNameMain.module}
             element={
               <React.Suspense fallback={<Loading />}>
-                <Module />
+                <Private>
+                  <Module />
+                </Private>
               </React.Suspense>
             }
           />
@@ -106,7 +110,9 @@ export function Router() {
             path={routsNameMain.exam.index}
             element={
               <React.Suspense fallback={<Loading />}>
-                <Exam />
+                <Private>
+                  <Exam />
+                </Private>
               </React.Suspense>
             }
           />
@@ -115,7 +121,9 @@ export function Router() {
             path={routsNameMain.exam.create}
             element={
               <React.Suspense fallback={<Loading />}>
-                <ExamCreate />
+                <Private>
+                  <ExamCreate />
+                </Private>
               </React.Suspense>
             }
           />
@@ -124,7 +132,9 @@ export function Router() {
             path={routsNameMain.exam.edit}
             element={
               <React.Suspense fallback={<Loading />}>
-                <Exam />
+                <Private>
+                  <Exam />
+                </Private>
               </React.Suspense>
             }
           />
@@ -134,7 +144,9 @@ export function Router() {
             path={routsNameMain.exam.result}
             element={
               <React.Suspense fallback={<Loading />}>
-                <Result />
+                <Private>
+                  <Result />
+                </Private>
               </React.Suspense>
             }
           />
@@ -143,7 +155,9 @@ export function Router() {
             path={routsNameMain.exam.check}
             element={
               <React.Suspense fallback={<Loading />}>
-                <ExamCheck />
+                <Private>
+                  <ExamCheck />
+                </Private>
               </React.Suspense>
             }
           />
@@ -152,7 +166,9 @@ export function Router() {
             path={routsNameMain.task.index}
             element={
               <React.Suspense fallback={<Loading />}>
-                <Task />
+                <Private>
+                  <Task />
+                </Private>
               </React.Suspense>
             }
           />
@@ -161,7 +177,9 @@ export function Router() {
             path={routsNameMain.task.create}
             element={
               <React.Suspense fallback={<Loading />}>
-                <TaskCreate />
+                <Private>
+                  <TaskCreate />
+                </Private>
               </React.Suspense>
             }
           />
@@ -170,7 +188,9 @@ export function Router() {
             path={routsNameMain.task.result}
             element={
               <React.Suspense fallback={<Loading />}>
-                <TaskSubmission />
+                <Private>
+                  <TaskSubmission />
+                </Private>
               </React.Suspense>
             }
           />
@@ -179,7 +199,9 @@ export function Router() {
             path={routsNameMain.task.check}
             element={
               <React.Suspense fallback={<Loading />}>
-                <TaskCheck />
+                <Private>
+                  <TaskCheck />
+                </Private>
               </React.Suspense>
             }
           />
@@ -188,7 +210,9 @@ export function Router() {
             path={routsNameMain.material}
             element={
               <React.Suspense fallback={<Loading />}>
-                <Material />
+                <Private>
+                  <Material />
+                </Private>
               </React.Suspense>
             }
           />

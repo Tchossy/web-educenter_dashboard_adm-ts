@@ -1,12 +1,17 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 
 import { InputFloatingLabel } from '../../components/input/InputFloatingLabel'
-import { User, Mail, Lock, Phone } from 'lucide-react'
+import { Mail, Lock } from 'lucide-react'
 import { BaseButton } from '../../components/buttons/baseButton'
+import { useAdminStore } from '../../stores/adminStore'
+import { useAdmin } from '../../hook/useAdmin'
+import { ToastContainer } from 'react-toastify'
+import { showToast } from '../../utils/toasts'
+import { AdminInterface } from '../../interfaces/IAdmin'
 
 const loginEmployeeSchema = z.object({
   email: z
@@ -31,6 +36,10 @@ const loginEmployeeSchema = z.object({
 type loginEmployeeType = z.infer<typeof loginEmployeeSchema>
 
 export function Login() {
+  const { addAdmin } = useAdminStore()
+
+  const { loading, error, response, resData, signInWithEmail } = useAdmin()
+
   const {
     control,
     handleSubmit,
@@ -40,13 +49,28 @@ export function Login() {
   })
 
   async function handleLogin(dataForm: loginEmployeeType) {
-    alert('Login')
-    console.log(dataForm)
+    await signInWithEmail(dataForm.email, dataForm.password)
+
+    if (error) {
+      showToast('error', response)
+    } else if (response) {
+      showToast('success', response)
+    }
   }
+
+  // Esse useEffect será acionado sempre que resData mudar
+  useEffect(() => {
+    if (resData) {
+      // console.log('Dados retornados: ', resData)
+      addAdmin(resData)
+    }
+  }, [resData])
 
   return (
     <>
       <div className="relative w-screen h-screen flex flex-row justify-center items-center gap-0 bg-slate-100/50 ">
+        <ToastContainer />
+
         <div className="relative p-8 w-auto h-auto bg-white rounded-2xl flex flex-col justify-center items-start gap-5 max-w-3xl shadow-lg ">
           {/* Logo */}
           <div className="max-w-[18rem] ">
@@ -90,11 +114,13 @@ export function Login() {
               error={errors.password}
             />
 
-            <BaseButton
-              typeButton="submit"
-              title="Efetuar login"
-              styleBtn="CircleHover"
-            />
+            {!loading && (
+              <BaseButton
+                typeButton="submit"
+                title="Efetuar login"
+                styleBtn="CircleHover"
+              />
+            )}
           </form>
         </div>
       </div>
