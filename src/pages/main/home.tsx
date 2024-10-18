@@ -1,13 +1,21 @@
 import { useEffect, useState } from 'react'
 
+// Icon
 import { GraduationCap, LibraryBig, BookMarked } from 'lucide-react'
 import { LiaChalkboardTeacherSolid } from 'react-icons/lia'
+// Component
 import { TableRowExamLittle } from '../../components/table/TableRowExamLittle'
 import { TableRowResultLittle } from '../../components/table/TableRowResultLittle'
-import { routsNameMain } from '../../data/routsName'
 import { Breadcrumbs } from '../../components/Breadcrumbs'
+// Data
+import { routsNameMain } from '../../data/routsName'
+// UseStores
+import { useAdminStore } from '../../stores/adminStore'
+import { getGreeting, getGreetingMsg } from '../../utils/getGreeting'
 
 export function Home() {
+  const { currentAdminData } = useAdminStore()
+
   const [rowsDataUser, setRowsDataUser] = useState<any[] | null>(null)
   const [rowsDataExams, setRowsDataExams] = useState<any[] | null>(null)
   const [rowsDataResults, setRowsDataResults] = useState<any[] | null>(null)
@@ -72,12 +80,13 @@ export function Home() {
       <div className="relative w-full flex flex-row justify-between items-start rounded-md bg-light dark:bg-dark shadow-3xl  ">
         <div className="w-full my-14 mx-6 flex flex-col justify-start items-start gap-2">
           <span className="text-2xl font-semibold ">
-            Bom dia,{' '}
-            <span className="text-primary-200 ">Sr. Rafael Pilartes</span>
+            {getGreeting()},{' '}
+            <span className="text-primary-200 ">
+              Sr{currentAdminData?.gender == 'male' ? '' : '(a)'} .{' '}
+              {currentAdminData?.first_name} {currentAdminData?.last_name}
+            </span>
           </span>
-          <span className="font-normal text-base ">
-            Tenha um bom dia de trabalho
-          </span>
+          <span className="font-normal text-base ">{getGreetingMsg()}</span>
         </div>
 
         <div className="w-full h-full relative z-[1] max-w-s-840:hidden ">

@@ -21,7 +21,7 @@ const TableRow: React.FC<TableRowProps> = ({
   handleDeleteRow
 }) => {
   const labelStatus = rowItem.status == 'active' ? 'Ativo' : 'Desativo'
-  const labelGender = rowItem.gender == 'mane' ? 'Masculino' : 'Feminino'
+  const labelGender = rowItem.gender == 'male' ? 'Masculino' : 'Feminino'
   return (
     <motion.tr
       // initial={{ opacity: 0, y: -50 }}

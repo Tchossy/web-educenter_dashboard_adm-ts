@@ -1,3 +1,5 @@
+import { GenderType } from '../types/enum'
+
 export interface AdminInterface {
   id?: string
   photo?: string
@@ -5,7 +7,7 @@ export interface AdminInterface {
   last_name: string
   phone: string
   email: string
-  gender?: string
+  gender?: GenderType
   status: string
   password?: string
   date_create?: string

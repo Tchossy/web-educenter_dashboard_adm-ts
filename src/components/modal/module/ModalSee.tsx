@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 // Lib
 import Modal from 'react-modal'
@@ -22,6 +22,10 @@ import { SelectCustomZod } from '../../selects/SelectCustomZod'
 // interface
 import { modalSeeType } from '../../../types/modal'
 import { TextAreaLabel } from '../../input/TextAreaLabelZod'
+import { OptionType } from '../../../types/option'
+import { showToast } from '../../../utils/toasts'
+import CourseViewModel from '../../../services/ViewModel/CourseViewModel'
+import { CourseInterface } from '../../../interfaces/ICourseInterface'
 
 const formSchema = z.object({
   name: z
@@ -37,12 +41,12 @@ const formSchema = z.object({
   duration: z.number({
     required_error: 'A duração é obrigatória!'
   }),
-  state: z.string().refine(
+  course_id: z.string().refine(
     value => {
-      return value === 'inactive' || value === 'active'
+      return value != ''
     },
     {
-      message: "Por favor, selecione uma opção válida: 'Ativo' ou 'Inativo'"
+      message: 'O Curso é obrigatória!'
     }
   ),
   status: z.string({
@@ -57,8 +61,7 @@ export function ModalSeeModule({
   modalSeeRowIsOpen,
   setModalSeeRowIsOpen
 }: modalSeeType) {
-  // Photo
-  const imagesSelect = baseInfo.photo as string
+  const [rowsCourseData, setRowsCourseData] = useState<OptionType[]>([])
 
   // Const
   const namePageSingular = 'módulo'
@@ -67,7 +70,7 @@ export function ModalSeeModule({
     name: baseInfo.name,
     description: baseInfo.description,
     duration: baseInfo.duration,
-    state: baseInfo.state,
+    course_id: baseInfo.course_id,
     status: baseInfo.status
   }
 
@@ -87,6 +90,37 @@ export function ModalSeeModule({
   function afterOpenModal() {
     // references are now sync'd and can be accessed.
   }
+
+  // Handle Select
+  const handleStatusChange = (gender: string) => {
+    console.log(`Selected State: ${gender}`)
+  }
+
+  // Function Course
+  async function fetchCourseData() {
+    // Clear
+    setRowsCourseData([])
+
+    // Get
+    await CourseViewModel.getAll().then(response => {
+      if (response.error) {
+        showToast('error', response.msg as string)
+      } else {
+        const arrayData = response.data as CourseInterface[]
+
+        const courseOptions: OptionType[] = arrayData?.map(obj => ({
+          value: obj.id as string,
+          label: obj.name as string
+        }))
+
+        setRowsCourseData(courseOptions)
+      }
+    })
+  }
+
+  useEffect(() => {
+    fetchCourseData()
+  }, [])
 
   return (
     <>
@@ -114,22 +148,9 @@ export function ModalSeeModule({
             </div>
 
             <form className="w-full p-6 flex flex-col justify-center items-center gap-6">
-              <div className="w-full flex flex-col items-start justify-start">
-                <div className="w-full max-w-[14rem] flex items-start justify-start ">
-                  <label className="w-full h-40 flex flex-col items-center justify-center border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-70 dark:hover:bg-bray-800 dark:bg-gray-700 hover:bg-gray-800 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600 transition-all duration-300 relative overflow-hidden">
-                    {imagesSelect && (
-                      <img
-                        className=" w-full h-full object-cover absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 transition-transform duration-300"
-                        src={imagesSelect}
-                        alt="Rafael Pilartes"
-                      />
-                    )}
-                  </label>
-                </div>
-              </div>
-
               <div className="w-full grid gap-6 md:grid-cols-1">
                 <CustomInput
+                  isDisabled={true}
                   type="text"
                   htmlFor="name"
                   label="Nome"
@@ -151,17 +172,19 @@ export function ModalSeeModule({
               </div>
 
               <div className="w-full grid gap-6 md:grid-cols-2">
-                <CustomInput
-                  type="number"
-                  htmlFor="duration"
-                  label="Duração em semanas"
-                  placeholder="Ex.: 4"
+                <SelectCustomZod
+                  name="course_id"
+                  label="Curso"
+                  isDisabled={true}
                   control={control}
-                  error={errors.duration}
+                  error={errors.course_id}
+                  options={rowsCourseData}
+                  onOptionChange={handleStatusChange}
                 />
                 <SelectCustomZod
                   name="status"
                   label="Estado"
+                  isDisabled={true}
                   control={control}
                   error={errors.status}
                   options={statusOptions}

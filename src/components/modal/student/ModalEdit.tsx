@@ -1,25 +1,39 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { BeatLoader } from 'react-spinners'
 
 // Lib
 import Modal from 'react-modal'
+import { ToastContainer } from 'react-toastify'
+// Icon
 import { X } from 'lucide-react'
-
 // Form
+import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
+
+// Services
+import uploadViewModel from '../../../services/ViewModel/uploadViewModel'
+import StudentViewModel from '../../../services/ViewModel/StudentViewModel'
+// Interfaces
+import { StudentInterface } from '../../../interfaces/IStudentInterface'
+// Type
+import { modalEditeType } from '../../../types/modal'
+// Data
+import { genderOptions, statusOptions } from '../../../data/selectOption'
+// Utils
+import { showToast } from '../../../utils/toasts'
 
 // Component
 import { CustomInput } from '../../input/InputLabel'
-
-// Data
-import { genderOptions, statusOptions } from '../../../data/selectOption'
+import { SelectCustomZod } from '../../selects/SelectCustomZod'
 
 // Style
 import { customStylesModalCenter } from '../../../styles/custom/modals'
-import { SelectCustomZod } from '../../selects/SelectCustomZod'
-import { modalEditeType } from '../../../types/modal'
 import { OptionType } from '../../../types/option'
+import CourseViewModel from '../../../services/ViewModel/CourseViewModel'
+import { CourseInterface } from '../../../interfaces/ICourseInterface'
+import ModuleViewModel from '../../../services/ViewModel/ModuleViewModel'
+import { ModuleInterface } from '../../../interfaces/IModuleInterface'
 
 const formSchema = z.object({
   first_name: z
@@ -38,14 +52,9 @@ const formSchema = z.object({
     .refine(value => value, {
       message: 'Por favor, preencha este campo'
     }),
-  phone: z
-    .string()
-    .refine(value => /^\+?[0-9]+$/g.test(value), {
-      message: 'Formato de número invalido'
-    })
-    .refine(value => value, {
-      message: 'Por favor, preencha este campo.'
-    }),
+  phone: z.string({
+    required_error: 'Por favor, preencha este campo!'
+  }),
   email: z
     .string({
       required_error: 'O email é obrigatório!'
@@ -53,6 +62,14 @@ const formSchema = z.object({
     .email('Formato de email invalido')
     .toLowerCase()
     .trim(),
+  date_of_birth: z.string().refine(
+    value => {
+      return value != ''
+    },
+    {
+      message: 'Por favor, informe hora de fim'
+    }
+  ),
   status: z.string().refine(
     value => {
       return value === 'inactive' || value === 'active'
@@ -77,31 +94,15 @@ const formSchema = z.object({
     .refine(value => value, {
       message: 'Por favor, selecione uma opção válida'
     }),
-  specialty_id: z
+  module_id: z
     .string({
       required_error: 'O módulo é obrigatório!'
     })
     .refine(value => value, {
       message: 'Por favor, selecione uma opção válida'
     }),
-  password: z
-    .string({
-      required_error: 'A palavra-passe é obrigatório!'
-    })
-    .min(6, 'A palavra-passe tem de no mínimo 6 caracteres')
-    .trim()
-    .refine(value => value, {
-      message: 'Por favor, preencha este campo.'
-    }),
-  confirm_password: z
-    .string({
-      required_error: 'A palavra-passe é obrigatório!'
-    })
-    .min(6, 'A palavra-passe tem de no mínimo 6 caracteres')
-    .trim()
-    .refine(value => value, {
-      message: 'Por favor, preencha este campo.'
-    })
+  password: z.string().trim(),
+  confirm_password: z.string().trim()
 })
 
 type formType = z.infer<typeof formSchema>
@@ -111,13 +112,22 @@ export function ModalEditStudent({
   modalEditRowIsOpen,
   handleUpdateListing,
   setModalEditRowIsOpen
-}: modalEditeType) {
+}: modalEditeType<StudentInterface>) {
+  // Loading
+  const [uploading, setUploading] = useState<boolean>(false)
+  const [isSend, setIsSend] = useState<boolean>(false)
+
+  const [rowsCourseData, setRowsCourseData] = useState<OptionType[]>([])
+  const [rowsModuleData, setRowsModuleData] = useState<OptionType[]>([])
+
   // State
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [imagesSelect, setImagesSelect] = useState<string>(baseInfo.photo)
+  const [imagesSelect, setImagesSelect] = useState<string>(
+    baseInfo?.photo as string
+  )
 
   // Const
-  const namePageSingular = 'estudante'
+  const namePageSingular = 'student'
 
   const initialValues = {
     first_name: baseInfo.first_name,
@@ -125,9 +135,10 @@ export function ModalEditStudent({
     phone: baseInfo.phone,
     email: baseInfo.email,
     gender: baseInfo.gender,
+    date_of_birth: baseInfo.date_of_birth,
     status: baseInfo.status,
     course_id: baseInfo.course_id,
-    specialty_id: baseInfo.specialty_id,
+    module_id: baseInfo.module_id,
     password: '',
     confirm_password: ''
   }
@@ -164,15 +175,124 @@ export function ModalEditStudent({
     console.log(`Selected Gender: ${gender}`)
     // Faça algo com o valor do gênero, como atualizar o estado da sua aplicação.
   }
-  const handleStatusChange = (gender: string) => {
-    // setState(gender)
-    console.log(`Selected State: ${gender}`)
+  const handleStatusChange = (status: string) => {
+    // setStatus(status)
+    console.log(`Selected Status: ${status}`)
+  }
+  const handleCourseChange = (course: string) => {
+    console.log(`Selected course: ${course}`)
+    fetchModuleData(course)
+  }
+  const handleModuleChange = (module: string) => {
+    console.log(`Selected module: ${module}`)
   }
 
-  // Funtion
+  // Function Submit Form
   async function handleSubmitForm(dataForm: any) {
-    console.log(dataForm)
+    if (dataForm.password !== dataForm.confirm_password) {
+      showToast('error', 'As palavras pass não convidem')
+      return
+    }
+
+    setIsSend(true)
+
+    let imageUrl: string | undefined = ''
+
+    if (selectedFile) {
+      const imageData = new FormData()
+      imageData.append('imageStudent', selectedFile)
+
+      const responseUpload = await uploadViewModel.uploadStudentPhoto(imageData)
+
+      if (responseUpload.error) {
+        showToast('error', responseUpload.msg as string)
+        setIsSend(false)
+        return
+      }
+
+      imageUrl = responseUpload.url ? responseUpload.url : ''
+    }
+
+    try {
+      // Cria os dados para o admin
+      const dataToSave: StudentInterface = {
+        ...dataForm,
+        photo: imageUrl
+      }
+
+      // Tenta criar o admin com os dados salvos
+      const resultSubmit = await StudentViewModel.update(
+        baseInfo?.id as string,
+        dataToSave
+      )
+
+      if (resultSubmit.error) {
+        showToast('error', resultSubmit.msg)
+      } else {
+        showToast('success', resultSubmit.msg)
+        setTimeout(() => {
+          setIsSend(false)
+          closeModal()
+        }, 4000)
+
+        handleUpdateListing()
+      }
+    } catch (error) {
+      showToast('error', String(error) as string)
+    }
   }
+
+  // Function Course
+  async function fetchCourseData() {
+    // Clear
+    setRowsCourseData([])
+
+    // Get
+    await CourseViewModel.getAll().then(response => {
+      if (response.error) {
+        showToast('error', response.msg as string)
+      } else {
+        const arrayData = response.data as CourseInterface[]
+
+        const courseOptions: OptionType[] = arrayData?.map(obj => ({
+          value: obj.id as string,
+          label: obj.name as string
+        }))
+
+        setRowsCourseData(courseOptions)
+      }
+    })
+  }
+  // Function Module
+  async function fetchModuleData(course_id: string) {
+    // Clear
+    setRowsModuleData([])
+
+    // Get
+    await ModuleViewModel.getAllByCourse(course_id)
+      .then(response => {
+        if (response.error) {
+          showToast('error', response.msg as string)
+        } else {
+          const arrayData = response.data as ModuleInterface[]
+
+          const moduleOptions: OptionType[] = arrayData?.map(obj => ({
+            value: obj.id as string,
+            label: obj.name as string
+          }))
+
+          setRowsModuleData(moduleOptions)
+        }
+      })
+      .catch(err => {
+        showToast('error', err as string)
+      })
+  }
+
+  useEffect(() => {
+    fetchCourseData()
+    fetchModuleData(baseInfo.course_id)
+  }, [])
 
   return (
     <>
@@ -185,7 +305,9 @@ export function ModalEditStudent({
         contentLabel="Example Modal"
       >
         <div className="w-full h-full flex items-center justify-center ">
-          <div className="w-full h-auto max-h-[100%] max-w-3xl flex flex-col items-center p-0  rounded-md overflow-y-auto bg-dark overflow-x-hidden scroll-smooth">
+          <ToastContainer />
+
+          <div className="w-full h-auto max-h-[90%] max-w-3xl flex flex-col items-center p-0  rounded-md overflow-y-auto bg-dark overflow-x-hidden scroll-smooth">
             <div className="w-full py-4 px-5 flex flex-row justify-between items-center border-b-[1px] border-gray-600 ">
               <p className="text-xl font-medium text-light">
                 Editar {namePageSingular}
@@ -238,7 +360,7 @@ export function ModalEditStudent({
                       <img
                         className=" w-full h-full object-cover absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 transition-transform duration-300"
                         src={imagesSelect}
-                        alt="Rafael Pilartes"
+                        alt="Tchossy"
                       />
                     )}
                     <input
@@ -270,6 +392,15 @@ export function ModalEditStudent({
                 />
               </div>
 
+              <CustomInput
+                type="email"
+                htmlFor="email"
+                label="Email address"
+                placeholder="Ex.: geral@rafaelpilartes.com"
+                control={control}
+                error={errors.email}
+              />
+
               <div className="w-full grid gap-6 md:grid-cols-2">
                 <CustomInput
                   type="phone"
@@ -279,13 +410,13 @@ export function ModalEditStudent({
                   control={control}
                   error={errors.phone}
                 />
+
                 <CustomInput
-                  type="email"
-                  htmlFor="email"
-                  label="Email address"
-                  placeholder="Ex.: geral@rafaelpilartes.com"
+                  type="date"
+                  htmlFor="date_of_birth"
+                  label="Data de aniversario"
                   control={control}
-                  error={errors.email}
+                  error={errors.date_of_birth}
                 />
               </div>
 
@@ -314,16 +445,16 @@ export function ModalEditStudent({
                   label="Curso"
                   control={control}
                   error={errors.course_id}
-                  options={genderOptions}
-                  onOptionChange={handleGenderChange}
+                  options={rowsCourseData}
+                  onOptionChange={handleCourseChange}
                 />
                 <SelectCustomZod
-                  name="specialty_id"
+                  name="module_id"
                   label="Modulo"
                   control={control}
-                  error={errors.specialty_id}
-                  options={statusOptions}
-                  onOptionChange={handleStatusChange}
+                  error={errors.module_id}
+                  options={rowsModuleData}
+                  onOptionChange={handleModuleChange}
                 />
               </div>
 
@@ -349,9 +480,16 @@ export function ModalEditStudent({
               <div className="w-full pt-4 flex flex-row justify-between items-center border-t-[1px] border-gray-600 ">
                 <button
                   type="submit"
+                  disabled={isSend}
                   className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-2 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
                 >
-                  Salvar alterações
+                  {isSend && (
+                    <>
+                      <BeatLoader color="white" size={10} />
+                    </>
+                  )}
+
+                  {!isSend && <span>Salvar alterações</span>}
                 </button>
               </div>
             </form>

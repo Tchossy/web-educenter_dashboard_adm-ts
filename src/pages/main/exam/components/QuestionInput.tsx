@@ -82,6 +82,7 @@ export function QuestionInput({ control, index, removeQuestion }: any) {
           />
 
           <button
+            type="button"
             onClick={() => removeQuestion(index)}
             className="w-[16rem] h-[2.6rem] min-w-[12rem] px-3 rounded-lg bg-[#FF0000] text-white hover:bg-red-600 active:bg-red-900 flex flex-row items-center justify-center gap-2 transition-all duration-300 "
           >
@@ -180,6 +181,7 @@ function MultipleChoiceOptions({ control, index }: any) {
         </div>
       ))}
       <button
+        type="button"
         onClick={addOption}
         className="w-[10rem] h-[2.6rem] rounded-lg bg-blue-500 text-white hover:bg-blue-700 active:bg-blue-900 flex flex-row items-center justify-center gap-2 transition-all duration-300 "
       >

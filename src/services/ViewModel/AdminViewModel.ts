@@ -70,6 +70,64 @@ class AdminViewModel {
     }
   }
 
+  public async getAllAdmin(): Promise<ApiResponse<AdminInterface[] | null>> {
+    try {
+      const response = await ApiDAO.get<ApiResponse<AdminInterface[] | null>>(
+        `/admin/get/all`
+      )
+
+      if (response.error) {
+        return {
+          error: true,
+          msg: response.msg || 'Unknown error occurred',
+          data: null
+        }
+      }
+
+      return {
+        error: false,
+        msg: response.msg || 'Admin retrieved successfully',
+        data: response.data
+      }
+    } catch (error: any) {
+      return {
+        error: true,
+        msg: error.message,
+        data: null
+      }
+    }
+  }
+
+  public async getAllByTermData(
+    term: string
+  ): Promise<ApiResponse<[AdminInterface] | null>> {
+    try {
+      const response = await ApiDAO.get<ApiResponse<[AdminInterface] | null>>(
+        `/admin/search/all/${term}`
+      )
+
+      if (response.error) {
+        return {
+          error: true,
+          msg: response.msg || 'Unknown error occurred',
+          data: null
+        }
+      }
+
+      return {
+        error: false,
+        msg: response.msg,
+        data: response.data
+      }
+    } catch (error: any) {
+      return {
+        error: true,
+        msg: error.message,
+        data: null
+      }
+    }
+  }
+
   public async getAdmin(
     id: string
   ): Promise<ApiResponse<AdminInterface | null>> {

@@ -7,6 +7,7 @@ interface CustomInputProps {
   type: string
   htmlFor: string
   label: string
+  defaultValue?: string
   placeholder?: string
   required?: boolean
 }
@@ -18,6 +19,7 @@ export function CustomInput({
   type,
   htmlFor,
   label,
+  defaultValue,
   placeholder,
   required
 }: CustomInputProps) {
@@ -26,7 +28,7 @@ export function CustomInput({
       <div className="w-full">
         <label
           htmlFor={htmlFor}
-          className="block mb-2 text-sm font-medium dark:text-light text-gray-600"
+          className="block mb-2 text-sm font-medium dark:text-light text-gray-400"
         >
           {label}
         </label>
@@ -39,9 +41,10 @@ export function CustomInput({
           render={({ field }) => (
             <input
               type={type}
+              defaultValue={defaultValue}
               id={htmlFor}
               {...field}
-              className={`w-full p-2.5 border dark:bg-gray-700/60 bg-gray-100/10  dark:border-gray-500/60 border-gray-300/60 dark:text-gray-300 text-gray-500 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block`}
+              className={`w-full p-2.5 border dark:bg-gray-700/60 bg-gray-100/10  dark:border-gray-500/60 border-gray-300/60 dark:text-gray-300 text-gray-400 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block`}
               placeholder={placeholder ? placeholder : ''}
               required={required}
             />

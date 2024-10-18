@@ -1,27 +1,97 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
+
+// Lib
 import { motion } from 'framer-motion'
+import { useNavigate } from 'react-router-dom'
+
+// Icon
 import { FiEdit } from 'react-icons/fi'
 import { AiFillDelete } from 'react-icons/ai'
-import { BadgeAction } from '../badge/BadgeAction'
-import { BadgeSimple } from '../badge/BadgeSimple'
 import { Eye } from 'lucide-react'
+
+// Component
+import { BadgeAction } from '../badge/BadgeAction'
+// interfaces
 import { ExamInterface } from '../../interfaces/IExamInterface'
+import { CourseInterface } from '../../interfaces/ICourseInterface'
+import { ModuleInterface } from '../../interfaces/IModuleInterface'
+// services
+import CourseViewModel from '../../services/ViewModel/CourseViewModel'
+import ModuleViewModel from '../../services/ViewModel/ModuleViewModel'
+// utils
+import { showToast } from '../../utils/toasts'
+// Data
+import { routsNameMain } from '../../data/routsName'
+import { BadgeSimple } from '../badge/BadgeSimple'
 
 interface TableRowProps {
   rowItem: ExamInterface
   handleDeleteRow: (action: string) => void
-  openModalSeeRow: (action: any) => void
-  openModalEditRow: (action: any) => void
 }
 
 export const TableRowExam: React.FC<TableRowProps> = ({
   rowItem,
-  openModalSeeRow,
-  openModalEditRow,
   handleDeleteRow
 }) => {
   const labelStatus = rowItem.status == 'completed' ? 'Completo' : 'Agendada'
   const colorStatus = rowItem.status == 'completed' ? 'blue' : 'orange'
+
+  const navigate = useNavigate()
+
+  const handleNavigation = (page: string) => {
+    navigate(page) // Navega para a página "/about"
+  }
+
+  const [rowsCourseData, setRowsCourseData] = useState<CourseInterface | null>(
+    null
+  )
+  const [rowsModuleData, setRowsModuleData] = useState<ModuleInterface | null>(
+    null
+  )
+
+  // Function Course
+  async function fetchCourseData() {
+    // Clear
+    setRowsCourseData(null)
+
+    // Get
+    await CourseViewModel.getOne(rowItem.course_id).then(response => {
+      if (response.error) {
+        showToast('error', response.msg as string)
+        console.log('error', response.msg)
+      } else {
+        const arrayData = response.data as CourseInterface
+        const listData = arrayData
+
+        setRowsCourseData(listData)
+      }
+    })
+  }
+  // Function Module
+  async function fetchModuleData() {
+    // Clear
+    setRowsModuleData(null)
+
+    // Get
+    await ModuleViewModel.getOne(rowItem?.module_id as string).then(
+      response => {
+        if (response.error) {
+          showToast('error', response.msg as string)
+          console.log('error', response.msg)
+        } else {
+          const arrayData = response.data as ModuleInterface
+          const listData = arrayData
+
+          setRowsModuleData(listData)
+        }
+      }
+    )
+  }
+
+  useEffect(() => {
+    fetchCourseData()
+    fetchModuleData()
+  }, [])
 
   return (
     <motion.tr className="border-b dark:border-gray-700 hover:bg-gray-100/40 dark:hover:bg-gray-700/40 transition-all duration-300 cursor-pointer">
@@ -43,10 +113,10 @@ export const TableRowExam: React.FC<TableRowProps> = ({
         </div>
       </td>
       <td className="px-3 py-3 min-w-[6rem] max-w-[20rem]">
-        {rowItem.course_id}
+        {rowsCourseData?.name}
       </td>
       <td className="px-3 py-3 min-w-[6rem] max-w-[20rem]">
-        {rowItem.module_id}
+        {rowsModuleData?.name}
       </td>
       <td className="px-3 py-3 min-w-[6rem] max-w-[20rem]">
         {rowItem.start_time}
@@ -66,13 +136,11 @@ export const TableRowExam: React.FC<TableRowProps> = ({
           <BadgeAction
             color="green"
             icon={FiEdit}
-            onclickBtn={() => openModalEditRow(rowItem)}
+            onclickBtn={() =>
+              handleNavigation(`${routsNameMain.exam.editStr}/${rowItem.id}`)
+            }
           />
-          <BadgeAction
-            color="blue"
-            icon={Eye}
-            onclickBtn={() => openModalSeeRow(rowItem)}
-          />
+          {/* <BadgeAction color="blue" icon={Eye} onclickBtn={() => null} /> */}
           <BadgeAction
             color="red"
             icon={AiFillDelete}

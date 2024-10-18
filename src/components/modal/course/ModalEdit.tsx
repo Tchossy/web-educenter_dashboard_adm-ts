@@ -1,25 +1,34 @@
 import { useState } from 'react'
+import { BeatLoader } from 'react-spinners'
 
 // Lib
 import Modal from 'react-modal'
+import { ToastContainer } from 'react-toastify'
+// Icon
 import { X } from 'lucide-react'
-
 // Form
+import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
+
+// Services
+import uploadViewModel from '../../../services/ViewModel/uploadViewModel'
+import StudentViewModel from '../../../services/ViewModel/StudentViewModel'
+// Interfaces
+import { CourseInterface } from '../../../interfaces/ICourseInterface'
+// Type
+import { modalEditeType } from '../../../types/modal'
+// Data
+import { genderOptions, statusOptions } from '../../../data/selectOption'
+// Utils
+import { showToast } from '../../../utils/toasts'
 
 // Component
 import { CustomInput } from '../../input/InputLabel'
-
-// Data
-import { genderOptions, statusOptions } from '../../../data/selectOption'
+import { SelectCustomZod } from '../../selects/SelectCustomZod'
 
 // Style
 import { customStylesModalCenter } from '../../../styles/custom/modals'
-import { SelectCustomZod } from '../../selects/SelectCustomZod'
-import { modalEditeType } from '../../../types/modal'
-import { OptionType } from '../../../types/option'
 import { TextAreaLabel } from '../../input/TextAreaLabelZod'
 
 const formSchema = z.object({
@@ -33,20 +42,17 @@ const formSchema = z.object({
       required_error: 'A descrição é obrigatório!'
     })
     .min(20, 'A descrição deve ter no mínimo 20 caracteres'),
-  duration: z.number({
+  duration: z.string({
     required_error: 'A duração é obrigatória!'
   }),
-  state: z.string().refine(
+  status: z.string().refine(
     value => {
       return value === 'inactive' || value === 'active'
     },
     {
       message: "Por favor, selecione uma opção válida: 'Ativo' ou 'Inativo'"
     }
-  ),
-  status: z.string({
-    required_error: 'O status do curso é obrigatório!'
-  })
+  )
 })
 
 type formType = z.infer<typeof formSchema>
@@ -56,10 +62,14 @@ export function ModalEditCourse({
   modalEditRowIsOpen,
   handleUpdateListing,
   setModalEditRowIsOpen
-}: modalEditeType) {
+}: modalEditeType<CourseInterface>) {
+  // Loading
+  const [uploading, setUploading] = useState<boolean>(false)
+  const [isSend, setIsSend] = useState<boolean>(false)
+
   // State
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [imagesSelect, setImagesSelect] = useState<string>(baseInfo.photo)
+  const [imagesSelect, setImagesSelect] = useState<string>(baseInfo.image)
 
   // Const
   const namePageSingular = 'curso'
@@ -68,7 +78,6 @@ export function ModalEditCourse({
     name: baseInfo.name,
     description: baseInfo.description,
     duration: baseInfo.duration,
-    state: baseInfo.state,
     status: baseInfo.status
   }
 
@@ -93,25 +102,64 @@ export function ModalEditCourse({
   // OnChange
   const onImageChange = (e: any) => {
     const [file] = e.target.files
-    const photo = e.target.files[0]
-    setSelectedFile(photo)
+    const image = e.target.files[0]
+    setSelectedFile(image)
     setImagesSelect(URL.createObjectURL(file))
   }
 
-  // Select
-  const handleGenderChange = (gender: string) => {
-    // setGender(gender)
-    console.log(`Selected Gender: ${gender}`)
-    // Faça algo com o valor do gênero, como atualizar o estado da sua aplicação.
-  }
-  const handleStatusChange = (gender: string) => {
-    // setState(gender)
-    console.log(`Selected State: ${gender}`)
+  const handleStatusChange = (status: string) => {
+    // setStatus(status)
+    console.log(`Selected Status: ${status}`)
   }
 
-  // Funtion
+  // Function Submit Form
   async function handleSubmitForm(dataForm: any) {
-    console.log(dataForm)
+    setIsSend(true)
+
+    let imageUrl: string | undefined = ''
+
+    if (selectedFile) {
+      const imageData = new FormData()
+      imageData.append('imageCourse', selectedFile)
+
+      const responseUpload = await uploadViewModel.uploadCoursePhoto(imageData)
+
+      if (responseUpload.error) {
+        showToast('error', responseUpload.msg as string)
+        setIsSend(false)
+        return
+      }
+
+      imageUrl = responseUpload.url ? responseUpload.url : ''
+    }
+
+    try {
+      // Cria os dados para o admin
+      const dataToSave: CourseInterface = {
+        ...dataForm,
+        image: imageUrl
+      }
+
+      // Tenta criar o admin com os dados salvos
+      const resultSubmit = await StudentViewModel.update(
+        baseInfo.id as string,
+        dataToSave
+      )
+
+      if (resultSubmit.error) {
+        showToast('error', resultSubmit.msg)
+      } else {
+        showToast('success', resultSubmit.msg)
+        setTimeout(() => {
+          setIsSend(false)
+          closeModal()
+        }, 4000)
+
+        handleUpdateListing()
+      }
+    } catch (error) {
+      showToast('error', String(error) as string)
+    }
   }
 
   return (
@@ -125,6 +173,8 @@ export function ModalEditCourse({
         contentLabel="Example Modal"
       >
         <div className="w-full h-full flex items-center justify-center ">
+          <ToastContainer />
+
           <div className="w-full h-auto max-h-[90%] max-w-3xl flex flex-col items-center p-0  rounded-md overflow-y-auto bg-dark overflow-x-hidden scroll-smooth">
             <div className="w-full py-4 px-5 flex flex-row justify-between items-center border-b-[1px] border-gray-600 ">
               <p className="text-xl font-medium text-light">
@@ -204,7 +254,6 @@ export function ModalEditCourse({
 
               <div className="w-full grid gap-6 md:grid-cols-1">
                 <TextAreaLabel
-                  isDisabled={true}
                   htmlFor="description"
                   label="Descrição"
                   placeholder="Ex.: Curso completo de Desenvolvimento Web com foco em HTML, CSS, JavaScript e frameworks modernos."
@@ -235,9 +284,16 @@ export function ModalEditCourse({
               <div className="w-full pt-4 flex flex-row justify-between items-center border-t-[1px] border-gray-600 ">
                 <button
                   type="submit"
+                  disabled={isSend}
                   className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-2 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
                 >
-                  Salvar alterações
+                  {isSend && (
+                    <>
+                      <BeatLoader color="white" size={10} />
+                    </>
+                  )}
+
+                  {!isSend && <span>Salvar alterações</span>}
                 </button>
               </div>
             </form>

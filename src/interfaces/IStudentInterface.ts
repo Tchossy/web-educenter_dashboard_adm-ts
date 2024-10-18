@@ -5,11 +5,11 @@ export interface StudentInterface {
   last_name: string
   phone: string
   email: string
-  gender?: string
+  gender?: 'male' | 'female'
   date_of_birth?: string
   course_id: string // Relacionamento com o curso
   module_id?: string // Relacionamento com a especialidade
-  status: string // ex: "active", "inactive"
+  status: 'active' | 'inactive' // ex: "active", "inactive"
   password?: string
   date_create?: string
   date_update?: string

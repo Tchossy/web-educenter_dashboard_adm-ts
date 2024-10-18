@@ -31,7 +31,7 @@ export function SelectCustomZod({
         {label && (
           <label
             htmlFor={name}
-            className="block mb-2 text-sm font-medium dark:text-light text-gray-600"
+            className="block mb-2 text-sm font-medium dark:text-light text-gray-400"
           >
             {label}
           </label>
@@ -49,7 +49,7 @@ export function SelectCustomZod({
               {...inputProps}
               id={name}
               className={`p-2.5 text-sm font-medium rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full dark:bg-gray-700/60 bg-gray-100/10  dark:border-gray-500/60 border-gray-300/60 dark:placeholder-gray-400 dark:text-gray-300 placeholder-gray-600
-text-gray-500`}
+text-gray-400`}
               onChange={e => {
                 field.onChange(e.target.value) // Atualiza o valor do form
                 onOptionChange(e.target.value) // Chama a função handleTypeMaterialChange

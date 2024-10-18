@@ -3,14 +3,16 @@ import { useContext, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AppContext } from '../../provider/AppProvider'
 import { DropdownUser } from '../DropdownUser'
+import { useAdminStore } from '../../stores/adminStore'
 
 export const Header = () => {
-  const navigate = useNavigate()
+  const { currentAdminData, removeAdmin } = useAdminStore()
+
   const { menuIsVisible, setMenuIsVisible, isDarkMode, setIsDarkMode } =
     useContext(AppContext)
 
   const logOut = () => {
-    alert('logOut')
+    removeAdmin()
   }
 
   const options = [
@@ -21,10 +23,9 @@ export const Header = () => {
     }
   ]
   const useInfo = {
-    photo:
-      'https://veja.abril.com.br/wp-content/uploads/2016/06/alx_michael-b-jordan_original.gif?w=620&h=349&crop=1',
-    name: 'Rafael Pilartes',
-    function: 'UX Designer'
+    photo: currentAdminData?.photo as string,
+    name: `${currentAdminData?.first_name} ${currentAdminData?.last_name}`,
+    function: 'Admin'
   }
 
   function toggleDark() {

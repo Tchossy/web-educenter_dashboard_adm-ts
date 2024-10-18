@@ -160,7 +160,7 @@ export const examData: ExamInterface[] = [
     end_time: '13:30',
     date_exam: '2024-10-20',
     mark: '100',
-    status: 'active',
+    status: 'completed',
     date_create: '2024-01-05'
   },
   {
@@ -329,7 +329,7 @@ export const taskData: TaskInterface[] = [
     course_id: '1',
     module_id: '2',
     task_type: 'online',
-    status: 'inactive',
+    status: 'closed',
     due_date: '2024-10-15',
     date_create: '2024-09-10'
   },
@@ -342,7 +342,7 @@ export const taskData: TaskInterface[] = [
     course_id: '2',
     module_id: '1',
     task_type: 'upload',
-    status: 'active',
+    status: 'open',
     due_date: '2024-11-01',
     date_create: '2024-09-20'
   }

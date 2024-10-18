@@ -1,24 +1,34 @@
 import { useState } from 'react'
+import { BeatLoader } from 'react-spinners'
 
 // Lib
 import Modal from 'react-modal'
+import { ToastContainer } from 'react-toastify'
+// Icon
 import { X } from 'lucide-react'
-
 // Form
+import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
+
+// Services
+import uploadViewModel from '../../../services/ViewModel/uploadViewModel'
+import ProfessorViewModel from '../../../services/ViewModel/ProfessorViewModel'
+// Interfaces
+import { ProfessorInterface } from '../../../interfaces/IProfessorInterface'
+// Type
+import { modalEditeType } from '../../../types/modal'
+// Data
+import { genderOptions, statusOptions } from '../../../data/selectOption'
+// Utils
+import { showToast } from '../../../utils/toasts'
 
 // Component
 import { CustomInput } from '../../input/InputLabel'
-
-// Data
-import { genderOptions, statusOptions } from '../../../data/selectOption'
+import { SelectCustomZod } from '../../selects/SelectCustomZod'
 
 // Style
 import { customStylesModalCenter } from '../../../styles/custom/modals'
-import { SelectCustomZod } from '../../selects/SelectCustomZod'
-import { modalEditeType } from '../../../types/modal'
 
 const formSchema = z.object({
   first_name: z
@@ -69,8 +79,8 @@ const formSchema = z.object({
         "Por favor, selecione uma opção válida: 'masculino' ou 'feminino'"
     }
   ),
-  password: z.string().trim(),
-  confirm_password: z.string().trim()
+  password: z.string().trim().optional(),
+  confirm_password: z.string().trim().optional()
 })
 
 type formType = z.infer<typeof formSchema>
@@ -80,10 +90,16 @@ export function ModalEditProfessor({
   modalEditRowIsOpen,
   handleUpdateListing,
   setModalEditRowIsOpen
-}: modalEditeType) {
+}: modalEditeType<ProfessorInterface>) {
+  // Loading
+  const [uploading, setUploading] = useState<boolean>(false)
+  const [isSend, setIsSend] = useState<boolean>(false)
+
   // State
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [imagesSelect, setImagesSelect] = useState<string>(baseInfo.photo)
+  const [imagesSelect, setImagesSelect] = useState<string>(
+    baseInfo?.photo as string
+  )
 
   // Const
   const namePageSingular = 'professor'
@@ -131,14 +147,66 @@ export function ModalEditProfessor({
     console.log(`Selected Gender: ${gender}`)
     // Faça algo com o valor do gênero, como atualizar o estado da sua aplicação.
   }
-  const handleStatusChange = (gender: string) => {
-    // setState(gender)
-    console.log(`Selected State: ${gender}`)
+  const handleStatusChange = (status: string) => {
+    // setStatus(status)
+    console.log(`Selected Status: ${status}`)
   }
 
-  // Funtion
+  // Function Submit Form
   async function handleSubmitForm(dataForm: any) {
-    console.log(dataForm)
+    if (dataForm.password !== dataForm.confirm_password) {
+      showToast('error', 'As palavras pass não convidem')
+      return
+    }
+
+    setIsSend(true)
+
+    let imageUrl: string | undefined = ''
+
+    if (selectedFile) {
+      const imageData = new FormData()
+      imageData.append('imageProfessor', selectedFile)
+
+      const responseUpload = await uploadViewModel.uploadProfessorPhoto(
+        imageData
+      )
+
+      if (responseUpload.error) {
+        showToast('error', responseUpload.msg as string)
+        setIsSend(false)
+        return
+      }
+
+      imageUrl = responseUpload.url ? responseUpload.url : ''
+    }
+
+    try {
+      // Cria os dados para o admin
+      const dataToSave: ProfessorInterface = {
+        ...dataForm,
+        photo: imageUrl
+      }
+
+      // Tenta criar o admin com os dados salvos
+      const resultSubmit = await ProfessorViewModel.update(
+        baseInfo?.id as string,
+        dataToSave
+      )
+
+      if (resultSubmit.error) {
+        showToast('error', resultSubmit.msg)
+      } else {
+        showToast('success', resultSubmit.msg)
+        setTimeout(() => {
+          setIsSend(false)
+          closeModal()
+        }, 4000)
+
+        handleUpdateListing()
+      }
+    } catch (error) {
+      showToast('error', String(error) as string)
+    }
   }
 
   return (
@@ -152,6 +220,8 @@ export function ModalEditProfessor({
         contentLabel="Example Modal"
       >
         <div className="w-full h-full flex items-center justify-center ">
+          <ToastContainer />
+
           <div className="w-full h-auto max-h-[90%] max-w-3xl flex flex-col items-center p-0  rounded-md overflow-y-auto bg-dark overflow-x-hidden scroll-smooth">
             <div className="w-full py-4 px-5 flex flex-row justify-between items-center border-b-[1px] border-gray-600 ">
               <p className="text-xl font-medium text-light">
@@ -297,9 +367,16 @@ export function ModalEditProfessor({
               <div className="w-full pt-4 flex flex-row justify-between items-center border-t-[1px] border-gray-600 ">
                 <button
                   type="submit"
+                  disabled={isSend}
                   className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-2 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
                 >
-                  Salvar alterações
+                  {isSend && (
+                    <>
+                      <BeatLoader color="white" size={10} />
+                    </>
+                  )}
+
+                  {!isSend && <span>Salvar alterações</span>}
                 </button>
               </div>
             </form>

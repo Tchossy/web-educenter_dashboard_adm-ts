@@ -8,6 +8,15 @@ export const statusOptions: OptionType[] = [
   { value: 'inactive', label: 'Inativo' },
   { value: 'active', label: 'Activo' }
 ]
+export const statusExamOptions: OptionType[] = [
+  { value: 'scheduled', label: 'Agendado' },
+  { value: 'completed', label: 'Concluido' }
+]
+export const statusTaskOptions: OptionType[] = [
+  { value: 'open', label: 'Aberta' },
+  { value: 'closed', label: 'Fechada' },
+  { value: 'pending', label: 'Pendente' }
+]
 export const materialTypeOptions: OptionType[] = [
   { value: 'video', label: 'Vídeo' },
   { value: 'pdf', label: 'Pdf' }

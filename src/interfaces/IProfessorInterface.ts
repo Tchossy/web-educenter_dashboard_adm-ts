@@ -1,3 +1,5 @@
+import { GenderType } from '../types/enum'
+
 export interface ProfessorInterface {
   id?: string
   photo?: string
@@ -5,8 +7,8 @@ export interface ProfessorInterface {
   last_name: string
   phone: string
   email: string
-  gender?: string
-  status: string // ex: "active", "inactive"
+  gender?: GenderType
+  status: 'active' | 'inactive' // ex: "active", "inactive"
   password?: string
   date_create?: string
   date_update?: string

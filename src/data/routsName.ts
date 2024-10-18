@@ -15,6 +15,7 @@ export const routsNameMain = {
     index: `/exam`,
     create: `/exam/create`,
     edit: `/exam/edit/:examId`,
+    editStr: `/exam/edit`,
     // Result
     result: `/exam/result`,
     check: `/exam/result/student/check/:studentId/:examId`,
@@ -26,6 +27,7 @@ export const routsNameMain = {
     index: `/task`,
     create: `/task/create`,
     edit: `/task/edit/:taskId`,
+    editStr: `/task/edit`,
     student: `/task/result/student/:studentId`,
     // Result
     result: `/task/result`,

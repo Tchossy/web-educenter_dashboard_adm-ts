@@ -1,12 +1,17 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 // LIBS
 import swal from 'sweetalert'
 import { IoSearchSharp } from 'react-icons/io5'
 
+// Icon
+import { FileDown, Plus } from 'lucide-react'
+
 // Data
 import { routsNameMain } from '../../data/routsName'
-import { FileDown, Plus } from 'lucide-react'
+
+// Services
+import StudentViewModel from '../../services/ViewModel/StudentViewModel'
 
 // Table
 import TableRow from '../../components/table/TableRowStudent'
@@ -15,21 +20,37 @@ import TableRow from '../../components/table/TableRowStudent'
 import { SelectCustom } from '../../components/selects/SelectCustom'
 import { Breadcrumbs } from '../../components/Breadcrumbs'
 import { InputWithButton } from '../../components/input/InputWithButton'
+import ExportToExcel from '../../components/ExportToExcel'
 
 // Modals
 import { ModalCreateStudent } from '../../components/modal/student/ModalCreate'
 import { ModalEditStudent } from '../../components/modal/student/ModalEdit'
 import { ModalSeeStudent } from '../../components/modal/student/ModalSee'
+
+// Interface
+import { StudentInterface } from '../../interfaces/IStudentInterface'
+import { showToast } from '../../utils/toasts'
 import { studentData } from '../../data/tableData'
 
 export function Student() {
   // State
+  const [rowsData, setRowsData] = useState<StudentInterface[] | null>(null)
+  const [dataToExport, setDataToExport] = useState<any[]>([])
+
+  // Modal
   const [modalEditRowIsOpen, setModalEditRowIsOpen] = useState<boolean>(false)
   const [modalSeeRowIsOpen, setModalSeeRowIsOpen] = useState<boolean>(false)
   const [modalCreateRowIsOpen, setModalCreateRowIsOpen] =
     useState<boolean>(false)
+
   const [rowSelect, setRowSelect] = useState<any | null>(null)
   const [selectedValue, setSelectedValue] = useState('8')
+
+  // Search
+  const [termForSearch, setTermForSearch] = useState<string>('')
+
+  const [docsPerPage, setDocsPerPage] = useState<string>('8')
+  const [totalDocs, setTotalDocs] = useState<number>(0)
 
   // Consts
   const namePageUppercase = 'Estudantes'
@@ -52,7 +73,7 @@ export function Student() {
     { value: '30', label: '30' },
     { value: 'Todos', label: 'Todos' }
   ]
-  const rowsTable = studentData.map((item, index) => {
+  const rowsTable = rowsData?.map((item, index) => {
     return (
       <TableRow
         key={index}
@@ -65,43 +86,85 @@ export function Student() {
   })
 
   // Function
-  const fetchData = () => {
-    // fetchData()
+  async function fetchData(limit: string) {
+    // Clear
+    setRowsData(null)
+
+    // Get
+    await StudentViewModel.getAll().then(response => {
+      if (response.error) {
+        showToast('error', response.msg as string)
+      } else {
+        const arrayData = response.data as unknown as StudentInterface[]
+        setTotalDocs(arrayData.length)
+        console.log(arrayData)
+
+        const listData = arrayData.slice(0, Number(limit))
+
+        setRowsData(listData as StudentInterface[])
+      }
+    })
   }
 
+  // Get more data
+  function fetchMoreData() {
+    fetchData(docsPerPage + docsPerPage)
+  }
+
+  // Search data
+  async function searchDocs() {
+    if (termForSearch == '') {
+      fetchData(docsPerPage)
+    } else {
+      StudentViewModel.getAllByTermData(termForSearch).then(response => {
+        setRowsData(response.data as StudentInterface[])
+      })
+    }
+  }
+
+  // Update Listing
+  const handleUpdateListing = () => {
+    fetchData(docsPerPage)
+  }
+
+  // Delete row
   function handleDeleteRow(id: string) {
     swal({
       title: 'Tem certeza?',
-      text: 'Uma vez excluído, você não poderá recuperar este usuario!',
+      text: 'Uma vez excluído, você não poderá recuperar!',
       buttons: ['Cancelar', 'Confirmar'],
       icon: 'warning',
       dangerMode: true
     }).then(async willDelete => {
       if (willDelete) {
-        try {
-          // const response = await deleteEmployees(documentId)
+        await StudentViewModel.delete(id).then(response => {
+          console.log(response)
 
-          swal('Deletado com sucesso', {
-            icon: 'success'
-          })
-        } catch (error) {
-          swal(`Erro ao deletar registo: ${error}`, {
-            icon: 'error'
-          })
-          console.error('', error)
-        }
+          if (response.error) {
+            swal(`Erro ao deletar registo: ${response.msg}`, {
+              icon: 'error'
+            })
+            console.error('', response.msg)
+          } else {
+            swal('Deletado com sucesso', {
+              icon: 'success'
+            })
+
+            fetchData(docsPerPage)
+          }
+        })
       } else {
-        swal('O studentistrador está seguro!', {
+        swal('O registo está seguro!', {
           icon: 'error'
         })
       }
     })
   }
-  const handleUpdateListing = () => {
-    fetchData()
-  }
+
+  // Change rows per page
   const handleSelectChange = (value: string) => {
-    setSelectedValue(value)
+    setDocsPerPage(value)
+    fetchData(value)
   }
 
   // Modal
@@ -116,6 +179,26 @@ export function Student() {
     setRowSelect(item)
     setModalSeeRowIsOpen(true)
   }
+
+  useEffect(() => {
+    fetchData(docsPerPage)
+  }, [])
+
+  useEffect(() => {
+    const newData = rowsData?.map(doc => ({
+      Id: `${doc.id}`,
+      Nome: doc.first_name,
+      Sobrenome: doc.last_name,
+      Telemovel: doc.phone,
+      Email: doc.email,
+      Genero: doc.gender,
+      Status: doc.status,
+      Data_de_criacao: doc.date_create,
+      Ultima_atualização: doc.date_update
+    }))
+
+    setDataToExport(newData as any)
+  }, [rowsData])
 
   return (
     <div className="w-full h-full flex flex-col justify-start items-start gap-6">
@@ -135,20 +218,24 @@ export function Student() {
               <Plus />
               Adicionar {namePageSingular}
             </button>
-            <button className="py-2 px-4 rounded-lg border-[1px] border-gray-200 dark:border-gray-600 hover:bg-gray-300/20 dark:hover:bg-gray-500/20 active:bg-gray-200 flex flex-row items-center justify-center gap-4 transition-all duration-300">
-              <FileDown />
-              Exportar
-            </button>
+
+            <ExportToExcel
+              data={dataToExport}
+              filename="material_data"
+              sheetName="Material"
+              titlePage="Lista de materiais"
+              imageSrc="http://localhost:5173/logo.png"
+              orientation="landscape"
+              scale={0.8}
+            />
           </div>
 
           <div className="w-full max-w-sm">
             <InputWithButton
+              onChange={e => setTermForSearch(e.target.value)}
               placeholder="Digite algo"
-              // buttonText="Enviar"
               icon={<IoSearchSharp size={20} />}
-              onButtonClick={() => {
-                // Lógica a ser executada quando o botão é clicado
-              }}
+              onButtonClick={searchDocs}
             />
           </div>
         </div>
@@ -176,6 +263,12 @@ export function Student() {
                 <th scope="col" className="px-3 py-3 min-w-[6rem] ">
                   Número
                 </th>
+                <th scope="col" className="px-3 py-3 min-w-[6rem]">
+                  Curso
+                </th>
+                <th scope="col" className="px-3 py-3 min-w-[6rem]">
+                  Módulo
+                </th>
                 <th scope="col" className="px-3 py-3 min-w-[6rem] ">
                   Conta
                 </th>
@@ -195,15 +288,15 @@ export function Student() {
             <p className="text-xs flex flex-row justify-start items-center gap-1">
               Mostrando
               <strong className="text-dark dark:text-light font-semibold">
-                1
+                {rowsData?.length !== undefined ? '1' : '0'}
               </strong>
               a
               <strong className="text-dark dark:text-light font-semibold">
-                8
+                {rowsData?.length !== undefined ? rowsData?.length : '0'}
               </strong>
               de
               <strong className="text-dark dark:text-light font-semibold">
-                21
+                {totalDocs}
               </strong>
               {namePageUppercase}
             </p>
@@ -219,6 +312,7 @@ export function Student() {
               </div>
 
               <button
+                onClick={fetchMoreData}
                 type="submit"
                 className="sm:w-auto text-xs font-medium text-dark px-5 py-2.5 text-center flex flex-row justify-center items-center gap-2 bg-gray-50 rounded-lg  border border-gray-300 focus:ring-blue-500 focus:border-blue-500 w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-light dark:focus:ring-blue-500 dark:focus:border-blue-500"
               >

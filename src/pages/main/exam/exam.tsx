@@ -1,12 +1,17 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 // LIBS
 import swal from 'sweetalert'
 import { IoSearchSharp } from 'react-icons/io5'
 
+// Icon
+import { Plus } from 'lucide-react'
+
 // Data
 import { routsNameMain } from '../../../data/routsName'
-import { FileDown, Plus } from 'lucide-react'
+
+// Services
+import ExamViewModel from '../../../services/ViewModel/ExamViewModel'
 
 // Table
 import { TableRowExam } from '../../../components/table/TableRowExam'
@@ -15,21 +20,27 @@ import { TableRowExam } from '../../../components/table/TableRowExam'
 import { SelectCustom } from '../../../components/selects/SelectCustom'
 import { Breadcrumbs } from '../../../components/Breadcrumbs'
 import { InputWithButton } from '../../../components/input/InputWithButton'
+import ExportToExcel from '../../../components/ExportToExcel'
 
-// Modals
-import { examData } from '../../../data/tableData'
+// Interface
+import { ExamInterface } from '../../../interfaces/IExamInterface'
+import { showToast } from '../../../utils/toasts'
 import { Link } from 'react-router-dom'
 
 export function Exam() {
   // State
-  const [modalEditRowIsOpen, setModalEditRowIsOpen] = useState<boolean>(false)
-  const [modalSeeRowIsOpen, setModalSeeRowIsOpen] = useState<boolean>(false)
-  const [modalCreateRowIsOpen, setModalCreateRowIsOpen] =
-    useState<boolean>(false)
-  const [rowSelect, setRowSelect] = useState<any | null>(null)
+  const [rowsData, setRowsData] = useState<ExamInterface[] | null>(null)
+  const [dataToExport, setDataToExport] = useState<any[]>([])
+
   const [selectedValue, setSelectedValue] = useState('8')
 
-  // Consts
+  // Search
+  const [termForSearch, setTermForSearch] = useState<string>('')
+
+  const [docsPerPage, setDocsPerPage] = useState<string>('8')
+  const [totalDocs, setTotalDocs] = useState<number>(0)
+
+  // consts
   const namePageUppercase = 'Exames'
   const namePageLowercase = 'exames'
   const namePageSingular = 'exame'
@@ -50,70 +61,118 @@ export function Exam() {
     { value: '30', label: '30' },
     { value: 'Todos', label: 'Todos' }
   ]
-  const rowsTable = examData.map((item, index) => {
+  const rowsTable = rowsData?.map((item, index) => {
     return (
       <TableRowExam
         key={index}
         rowItem={item}
-        openModalSeeRow={openModalSeeRow} // Substitua pelo seu código real
-        openModalEditRow={openModalEditRow} // Substitua pelo seu código real
         handleDeleteRow={handleDeleteRow} // Substitua pelo seu código real
       />
     )
   })
 
   // Function
-  const fetchData = () => {
-    // fetchData()
+  async function fetchData(limit: string) {
+    // Clear
+    setRowsData(null)
+
+    // Get
+    await ExamViewModel.getAll().then(response => {
+      if (response.error) {
+        showToast('error', response.msg as string)
+      } else {
+        const arrayData = response.data as unknown as ExamInterface[]
+        setTotalDocs(arrayData.length)
+        console.log(arrayData)
+
+        const listData = arrayData.slice(0, Number(limit))
+
+        setRowsData(listData as ExamInterface[])
+      }
+    })
   }
 
+  // Get more data
+  function fetchMoreData() {
+    const result = parseInt(docsPerPage) + parseInt(docsPerPage)
+    const str = result.toString()
+    fetchData(str)
+  }
+
+  // Search data
+  async function searchDocs() {
+    if (termForSearch == '') {
+      fetchData(docsPerPage)
+    } else {
+      ExamViewModel.getAllByTermData(termForSearch).then(response => {
+        setRowsData(response?.data as ExamInterface[])
+      })
+    }
+  }
+
+  // Delete row
   function handleDeleteRow(id: string) {
     swal({
       title: 'Tem certeza?',
-      text: 'Uma vez excluído, você não poderá recuperar este usuario!',
+      text: 'Uma vez excluído, você não poderá recuperar!',
       buttons: ['Cancelar', 'Confirmar'],
       icon: 'warning',
       dangerMode: true
     }).then(async willDelete => {
       if (willDelete) {
-        try {
-          // const response = await deleteEmployees(documentId)
+        await ExamViewModel.delete(id).then(response => {
+          console.log(response)
 
-          swal('Deletado com sucesso', {
-            icon: 'success'
-          })
-        } catch (error) {
-          swal(`Erro ao deletar registo: ${error}`, {
-            icon: 'error'
-          })
-          console.error('', error)
-        }
+          if (response.error) {
+            swal(`Erro ao deletar registo: ${response.msg}`, {
+              icon: 'error'
+            })
+            console.error('', response.msg)
+          } else {
+            swal('Deletado com sucesso', {
+              icon: 'success'
+            })
+
+            fetchData(docsPerPage)
+          }
+        })
       } else {
-        swal('O módulo está seguro!', {
+        swal('O registo está seguro!', {
           icon: 'error'
         })
       }
     })
   }
-  const handleUpdateListing = () => {
-    fetchData()
-  }
+
+  // Change rows per page
   const handleSelectChange = (value: string) => {
     setSelectedValue(value)
+    setDocsPerPage(value)
+    fetchData(value)
   }
 
-  // Modal
-  function openModalEditRow(item: any) {
-    setRowSelect(item)
-    setModalEditRowIsOpen(true)
-  }
-  function openModalCreateRow(item: any) {
-    setModalCreateRowIsOpen(true)
-  }
-  function openModalSeeRow(item: any) {
-    setRowSelect(item)
-    setModalSeeRowIsOpen(true)
-  }
+  useEffect(() => {
+    fetchData(docsPerPage)
+  }, [])
+
+  useEffect(() => {
+    const newData = rowsData?.map(doc => ({
+      Id: `${doc.id}`,
+      Tarefa: doc.name,
+      Descricao: doc.description,
+      Curso: doc.course_id,
+      Modulo: doc.module_id,
+      Inicio: doc.start_time,
+      Final: doc.end_time,
+      Data_Exame: doc.date_exam,
+      Pontuação: doc.mark,
+      Status: doc.status,
+      Data_de_criacao: doc.date_create,
+      Ultima_atualização: doc.date_update
+    }))
+
+    setDataToExport(newData as any)
+  }, [rowsData])
 
   return (
     <div className="w-full h-full flex flex-col justify-start items-start gap-6">
@@ -133,20 +192,24 @@ export function Exam() {
               <Plus />
               Adicionar {namePageSingular}
             </Link>
-            <button className="py-2 px-4 rounded-lg border-[1px] border-gray-200 dark:border-gray-600 hover:bg-gray-300/20 dark:hover:bg-gray-500/20 active:bg-gray-200 flex flex-row items-center justify-center gap-4 transition-all duration-300">
-              <FileDown />
-              Exportar
-            </button>
+
+            <ExportToExcel
+              data={dataToExport}
+              filename="exam_data"
+              sheetName="Exame"
+              titlePage="Lista de exames"
+              imageSrc="http://localhost:5173/logo.png"
+              orientation="landscape"
+              scale={0.8}
+            />
           </div>
 
           <div className="w-full max-w-sm">
             <InputWithButton
+              onChange={e => setTermForSearch(e.target.value)}
               placeholder="Digite algo"
-              // buttonText="Enviar"
               icon={<IoSearchSharp size={20} />}
-              onButtonClick={() => {
-                // Lógica a ser executada quando o botão é clicado
-              }}
+              onButtonClick={searchDocs}
             />
           </div>
         </div>
@@ -180,13 +243,13 @@ export function Exam() {
                   Hora de fim
                 </th>
                 <th scope="col" className="px-3 py-3 min-w-[6rem]">
+                  Marcação
+                </th>
+                <th scope="col" className="px-3 py-3 min-w-[6rem]">
                   Status
                 </th>
                 <th scope="col" className="px-3 py-3 min-w-[6rem]">
                   Data do exame
-                </th>
-                <th scope="col" className="px-3 py-3 min-w-[6rem]">
-                  Criado em
                 </th>
                 <th scope="col" className="px-3 py-3 min-w-[6rem]">
                   Ação
@@ -200,15 +263,15 @@ export function Exam() {
             <p className="text-xs flex flex-row justify-start items-center gap-1">
               Mostrando
               <strong className="text-dark dark:text-light font-semibold">
-                1
+                {rowsData?.length !== undefined ? '1' : '0'}
               </strong>
               a
               <strong className="text-dark dark:text-light font-semibold">
-                8
+                {rowsData?.length !== undefined ? rowsData?.length : '0'}
               </strong>
               de
               <strong className="text-dark dark:text-light font-semibold">
-                21
+                {totalDocs}
               </strong>
               {namePageUppercase}
             </p>
@@ -224,6 +287,7 @@ export function Exam() {
               </div>
 
               <button
+                onClick={fetchMoreData}
                 type="submit"
                 className="sm:w-auto text-xs font-medium text-dark px-5 py-2.5 text-center flex flex-row justify-center items-center gap-2 bg-gray-50 rounded-lg  border border-gray-300 focus:ring-blue-500 focus:border-blue-500 w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-light dark:focus:ring-blue-500 dark:focus:border-blue-500"
               >

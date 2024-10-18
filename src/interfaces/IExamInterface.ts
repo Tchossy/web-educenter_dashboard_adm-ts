@@ -1,6 +1,8 @@
+import { ExamStatusType } from '../types/enum'
+
 export interface ExamInterface {
   id?: string
-  image: string
+  image?: string
   name: string
   description: string
 
@@ -12,7 +14,7 @@ export interface ExamInterface {
   date_exam: string // Data do exame
 
   mark: string //
-  status: string // ex: "scheduled", "completed"
+  status: ExamStatusType // ex: "scheduled", "completed"
   date_create?: string
   date_update?: string
 }

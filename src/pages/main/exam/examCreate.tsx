@@ -1,25 +1,44 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+
+// Lib
+import { ToastContainer } from 'react-toastify'
+import { MdOutlinePlaylistAdd } from 'react-icons/md'
+import { BeatLoader } from 'react-spinners'
 
 // Form
 import { useFieldArray, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 
-// Icon
-import { MdOutlinePlaylistAdd } from 'react-icons/md'
+// Services
+import uploadViewModel from '../../../services/ViewModel/uploadViewModel'
+import ExamViewModel from '../../../services/ViewModel/ExamViewModel'
+import CourseViewModel from '../../../services/ViewModel/CourseViewModel'
+import ModuleViewModel from '../../../services/ViewModel/ModuleViewModel'
 
 // Data
 import { routsNameMain } from '../../../data/routsName'
+import { statusExamOptions, statusOptions } from '../../../data/selectOption'
 
-// Components
-import { Breadcrumbs } from '../../../components/Breadcrumbs'
-
-// Modals
+// Component
 import { CustomInput } from '../../../components/input/InputLabel'
-import { SelectCustomZod } from '../../../components/selects/SelectCustomZod'
-import { genderOptions, statusOptions } from '../../../data/selectOption'
 import { TextAreaLabel } from '../../../components/input/TextAreaLabelZod'
+import { SelectCustomZod } from '../../../components/selects/SelectCustomZod'
+import { Breadcrumbs } from '../../../components/Breadcrumbs'
 import { QuestionInput } from './components/QuestionInput'
+
+// Interfaces
+import { ExamInterface } from '../../../interfaces/IExamInterface'
+
+// Utils
+import { showToastBottom } from '../../../utils/toasts'
+// Interfaces
+import { CourseInterface } from '../../../interfaces/ICourseInterface'
+import { ModuleInterface } from '../../../interfaces/IModuleInterface'
+// Types
+import { OptionType } from '../../../types/option'
+import { ExamQuestionInterface } from '../../../interfaces/IExamQuestionInterface'
+import ExamQuestionViewModel from '../../../services/ViewModel/ExamQuestionViewModel'
 
 const formSchema = z.object({
   name: z
@@ -79,10 +98,10 @@ const formSchema = z.object({
     .min(1, 'O valor do exame tem que ser maior de 1'),
   status: z.string().refine(
     value => {
-      return value === 'inactive' || value === 'active'
+      return value === 'scheduled' || value === 'completed'
     },
     {
-      message: "Por favor, selecione uma opção válida: 'Ativo' ou 'Inativo'"
+      message: "Por favor, selecione uma opção válida: 'Agendado' ou 'Completo'"
     }
   ),
   questions: z
@@ -128,13 +147,19 @@ type formType = z.infer<typeof formSchema>
 
 export function ExamCreate() {
   // State
+  const [isCreated, setIsCreated] = useState<boolean>(false)
+  const [isExameId, setIsExameId] = useState<string | null>(null)
+
   const [isSend, setIsSend] = useState<boolean>(false)
+  const [uploading, setUploading] = useState<boolean>(false)
 
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [imagesSelect, setImagesSelect] = useState<string>('')
+  const [rowsCourseData, setRowsCourseData] = useState<OptionType[]>([])
+  const [rowsModuleData, setRowsModuleData] = useState<OptionType[]>([])
 
-  const [rowSelect, setRowSelect] = useState<any | null>(null)
-  const [selectedValue, setSelectedValue] = useState('8')
+  // Image
+  const [selectedImageFile, setSelectedImageFile] = useState<string>('')
+  const [urlImageUploaded, setUrlImageUploaded] = useState<string | null>(null)
+  const [imageSelect, setImageSelect] = useState<string>('')
 
   // Consts
   const namePageEntry = 'Criar exame'
@@ -149,6 +174,7 @@ export function ExamCreate() {
 
   // Form Zod
   const {
+    reset,
     control,
     handleSubmit,
     formState: { errors }
@@ -174,30 +200,227 @@ export function ExamCreate() {
   const onImageChange = (e: any) => {
     const [file] = e.target.files
     const photo = e.target.files[0]
-    setSelectedFile(photo)
-    setImagesSelect(URL.createObjectURL(file))
+    setSelectedImageFile(photo)
+    setImageSelect(URL.createObjectURL(file))
   }
 
-  // Funtion
-  const handleSubmitForm = async (data: formType) => {
-    console.log('Formulário enviado com sucesso', data)
+  // Handle Select
+  const handleCourseChange = (course: string) => {
+    console.log(`Selected course: ${course}`)
+    fetchModuleData(course)
+  }
+  const handleModuleChange = (module: string) => {
+    console.log(`Selected module: ${module}`)
+  }
+
+  // Function Upload
+  async function handleUploadImage(): Promise<{
+    urlImage: string
+    msgUpload: string
+  }> {
+    console.log('Uploading...')
+
+    setUploading(true)
+
+    const formData = new FormData()
+    formData.append('imageTask', selectedImageFile)
+
+    const result = await uploadViewModel.uploadTaskImage(formData)
+
+    if (result.error) {
+      throw new Error(result.msg)
+    }
+
+    const urlImage = result.url as string
+    const msgUpload = result.msg as string
+    return {
+      urlImage,
+      msgUpload
+    }
+  }
+
+  // Function Submit Form
+  async function handleSubmitForm(dataForm: any) {
+    setIsSend(true)
+
     try {
-      setIsSend(true)
-      // Adicionar lógica de envio, como uma requisição para a API
+      let urlImageToSave = urlImageUploaded ? urlImageUploaded : ''
+
+      if (!urlImageUploaded) {
+        const resUrl = await handleUploadImage()
+
+        const { urlImage, msgUpload } = resUrl
+        urlImageToSave = urlImage
+
+        setUrlImageUploaded(urlImage)
+
+        if (!urlImage) {
+          showToastBottom('error', msgUpload)
+          setIsSend(false)
+          return
+        }
+      }
+
+      const dataToSave: ExamInterface = {
+        ...dataForm,
+        image: urlImageToSave
+      }
+
+      if (!isCreated) {
+        const resultSubmit = await ExamViewModel.create(dataToSave)
+
+        if (resultSubmit.error) {
+          showToastBottom('error', resultSubmit.msg)
+          setIsSend(false)
+        } else {
+          showToastBottom('success', resultSubmit.msg)
+
+          setIsCreated(true)
+          setIsExameId(resultSubmit.data?.id as string)
+
+          if (dataForm.questions.length !== 0) {
+            dataForm.questions.forEach(async (question: any) => {
+              // Converte o array em uma string JSON
+              const optionsString = JSON.stringify(question.options)
+
+              const questionToSave: ExamQuestionInterface = {
+                exam_id: resultSubmit.data?.id as string,
+                question_text: question.question,
+                question_type: question.question_type,
+                options: optionsString as any,
+                value: question.value
+              }
+
+              const resultQuestionSubmit = await ExamQuestionViewModel.create(
+                questionToSave
+              )
+
+              if (resultQuestionSubmit.error) {
+                showToastBottom('error', resultQuestionSubmit.msg)
+                setIsSend(false)
+              } else {
+                setTimeout(() => {
+                  reset()
+                  setSelectedImageFile('')
+                  setUrlImageUploaded(null)
+                  setImageSelect('')
+                  setIsSend(false)
+                }, 3000)
+              }
+
+              // console.log(questionToSave)
+            })
+          } else {
+            alert('Por favor crie as perguntas para o exame')
+          }
+        }
+      } else {
+        alert('Esse exame já foi criado')
+
+        if (dataForm.questions) {
+          dataForm.questions.forEach(async (question: any) => {
+            // Converte o array em uma string JSON
+            const optionsString = JSON.stringify(question.options)
+
+            const questionToSave: ExamQuestionInterface = {
+              exam_id: isExameId as string,
+              question_text: question.question,
+              question_type: question.question_type,
+              options: optionsString as any,
+              value: question.value
+            }
+
+            const resultQuestionSubmit = await ExamQuestionViewModel.create(
+              questionToSave
+            )
+
+            if (resultQuestionSubmit.error) {
+              showToastBottom('error', resultQuestionSubmit.msg)
+              setIsSend(false)
+            } else {
+              setTimeout(() => {
+                reset()
+                setSelectedImageFile('')
+                setUrlImageUploaded(null)
+                setImageSelect('')
+                setIsCreated(false)
+                setIsExameId(null)
+                setIsSend(false)
+              }, 3000)
+            }
+
+            // console.log(questionToSave)
+          })
+        } else {
+          alert('Por favor crie as perguntas para o exame')
+        }
+      }
     } catch (error) {
-      console.error('Erro ao enviar o formulário', error)
-    } finally {
+      showToastBottom('error', String(error) as string)
       setIsSend(false)
     }
   }
 
+  // Function Course
+  async function fetchCourseData() {
+    // Clear
+    setRowsCourseData([])
+
+    // Get
+    await CourseViewModel.getAll().then(response => {
+      if (response.error) {
+        showToastBottom('error', response.msg as string)
+      } else {
+        const arrayData = response.data as CourseInterface[]
+
+        const courseOptions: OptionType[] = arrayData?.map(obj => ({
+          value: obj.id as string,
+          label: obj.name as string
+        }))
+
+        setRowsCourseData(courseOptions)
+      }
+    })
+  }
+  // Function Module
+  async function fetchModuleData(course_id: string) {
+    // Clear
+    setRowsModuleData([])
+
+    // Get
+    await ModuleViewModel.getAllByCourse(course_id)
+      .then(response => {
+        if (response.error) {
+          showToastBottom('error', response.msg as string)
+        } else {
+          const arrayData = response.data as ModuleInterface[]
+
+          const moduleOptions: OptionType[] = arrayData?.map(obj => ({
+            value: obj.id as string,
+            label: obj.name as string
+          }))
+
+          setRowsModuleData(moduleOptions)
+        }
+      })
+      .catch(err => {
+        showToastBottom('error', err as string)
+      })
+  }
+
+  useEffect(() => {
+    fetchCourseData()
+  }, [])
+
   return (
     <div className="w-full h-full flex flex-col justify-start items-start gap-6">
+      <ToastContainer />
+
       <div className="w-full flex flex-row items-center justify-between gap-2 ">
         <div className="w-full flex flex-col items-start justify-between gap-4">
           <Breadcrumbs items={itemsBreadcrumbs} />
           <h1 className="text-2xl font-bold text-dark dark:text-light ">
-            {namePageEntry}
+            {namePageEntry} {isExameId && `/ ${isExameId}`}
           </h1>
         </div>
       </div>
@@ -217,7 +440,7 @@ export function ExamCreate() {
                   htmlFor="dropzone-file"
                   className="w-full h-40 flex flex-col items-center justify-center border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-70 dark:hover:bg-bray-800 dark:bg-gray-700 hover:bg-gray-100/80 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600 transition-all duration-300 relative overflow-hidden"
                 >
-                  {!imagesSelect && (
+                  {!imageSelect && (
                     <div className="flex flex-col items-center justify-center pt-5 pb-6">
                       <svg
                         className="w-8 h-8 mb-4 text-gray-500 dark:text-gray-400"
@@ -244,10 +467,10 @@ export function ExamCreate() {
                     </div>
                   )}
 
-                  {imagesSelect && (
+                  {imageSelect && (
                     <img
                       className=" w-full h-full object-cover absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 transition-transform duration-300"
-                      src={imagesSelect}
+                      src={imageSelect}
                       alt="Rafael Pilartes"
                     />
                   )}
@@ -288,16 +511,16 @@ export function ExamCreate() {
                 label="Curso"
                 control={control}
                 error={errors.course_id}
-                options={statusOptions}
-                onOptionChange={() => null}
+                options={rowsCourseData}
+                onOptionChange={handleCourseChange}
               />
               <SelectCustomZod
                 name="module_id"
                 label="Modulo"
                 control={control}
                 error={errors.module_id}
-                options={statusOptions}
-                onOptionChange={() => null}
+                options={rowsModuleData}
+                onOptionChange={handleModuleChange}
               />
               <CustomInput
                 type="number"
@@ -315,7 +538,7 @@ export function ExamCreate() {
                 label="Estado"
                 control={control}
                 error={errors.status}
-                options={statusOptions}
+                options={statusExamOptions}
                 onOptionChange={() => null}
               />
               <CustomInput

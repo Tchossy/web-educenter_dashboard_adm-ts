@@ -1,25 +1,42 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 // Lib
 import Modal from 'react-modal'
 import { X } from 'lucide-react'
+import { BeatLoader } from 'react-spinners'
 
 // Form
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 
+// Services
+import uploadViewModel from '../../../services/ViewModel/uploadViewModel'
+import ModuleViewModel from '../../../services/ViewModel/ModuleViewModel'
+
 // Data
 import { statusOptions } from '../../../data/selectOption'
 
 // Component
 import { CustomInput } from '../../input/InputLabel'
+import { SelectCustomZod } from '../../selects/SelectCustomZod'
+import { TextAreaLabel } from '../../input/TextAreaLabelZod'
 
 // Style
 import { customStylesModalCenter } from '../../../styles/custom/modals'
-import { SelectCustomZod } from '../../selects/SelectCustomZod'
+
+// Types
 import { modalCreateType } from '../../../types/modal'
-import { TextAreaLabel } from '../../input/TextAreaLabelZod'
+
+// Interfaces
+import { ModuleInterface } from '../../../interfaces/IModuleInterface'
+
+// Utils
+import { showToast } from '../../../utils/toasts'
+import { ToastContainer } from 'react-toastify'
+import { OptionType } from '../../../types/option'
+import { CourseInterface } from '../../../interfaces/ICourseInterface'
+import CourseViewModel from '../../../services/ViewModel/CourseViewModel'
 
 const formSchema = z.object({
   name: z
@@ -57,10 +74,13 @@ export function ModalCreateModule({
   modalCreateRowIsOpen,
   setModalCreateRowIsOpen
 }: modalCreateType) {
-  // State
+  // Loading
   const [isSend, setIsSend] = useState<boolean>(false)
 
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [rowsCourseData, setRowsCourseData] = useState<OptionType[]>([])
+
+  // Image
+  const [selectedFile, setSelectedFile] = useState<string>('')
   const [imagesSelect, setImagesSelect] = useState<string>('')
 
   // Const
@@ -83,37 +103,67 @@ export function ModalCreateModule({
     // references are now sync'd and can be accessed.
   }
 
-  // OnChange
-  const onImageChange = (e: any) => {
-    const [file] = e.target.files
-    const photo = e.target.files[0]
-    setSelectedFile(photo)
-    setImagesSelect(URL.createObjectURL(file))
-  }
-
-  // Select
-  const handleGenderChange = (gender: string) => {
-    // setGender(gender)
-    console.log(`Selected Gender: ${gender}`)
-    // Faça algo com o valor do gênero, como atualizar o estado da sua aplicação.
-  }
+  // Handle Select
   const handleStatusChange = (gender: string) => {
-    // setState(gender)
     console.log(`Selected State: ${gender}`)
   }
 
-  // Funtion
-  const handleSubmitForm = async (data: formType) => {
-    console.log('Formulário enviado com sucesso', data)
+  // Function Course
+  async function fetchCourseData() {
+    // Clear
+    setRowsCourseData([])
+
+    // Get
+    await CourseViewModel.getAll().then(response => {
+      if (response.error) {
+        showToast('error', response.msg as string)
+      } else {
+        const arrayData = response.data as CourseInterface[]
+
+        const courseOptions: OptionType[] = arrayData?.map(obj => ({
+          value: obj.id as string,
+          label: obj.name as string
+        }))
+
+        setRowsCourseData(courseOptions)
+      }
+    })
+  }
+
+  // Function Submit Form
+  async function handleSubmitForm(dataForm: any) {
+    setIsSend(true)
+
     try {
-      setIsSend(true)
-      // Adicionar lógica de envio, como uma requisição para a API
+      // Cria os dados para o admin
+      const dataToSave: ModuleInterface = {
+        ...dataForm
+      }
+
+      // Tenta criar o admin com os dados salvos
+      const resultSubmit = await ModuleViewModel.create(dataToSave)
+
+      if (resultSubmit.error) {
+        showToast('error', resultSubmit.msg)
+        setIsSend(false)
+      } else {
+        showToast('success', resultSubmit.msg)
+        setTimeout(() => {
+          setIsSend(false)
+          closeModal()
+        }, 4000)
+
+        handleUpdateListing()
+      }
     } catch (error) {
-      console.error('Erro ao enviar o formulário', error)
-    } finally {
+      showToast('error', String(error) as string)
       setIsSend(false)
     }
   }
+
+  useEffect(() => {
+    fetchCourseData()
+  }, [])
 
   return (
     <>
@@ -126,6 +176,8 @@ export function ModalCreateModule({
         contentLabel="Example Modal"
       >
         <div className="w-full h-full flex items-center justify-center ">
+          <ToastContainer />
+
           <div className="w-full h-auto max-h-[90%] max-w-3xl flex flex-col items-center p-0  rounded-md overflow-y-auto bg-dark overflow-x-hidden scroll-smooth">
             <div className="w-full py-4 px-5 flex flex-row justify-between items-center border-b-[1px] border-gray-600 ">
               <p className="text-xl font-medium text-light">
@@ -171,7 +223,7 @@ export function ModalCreateModule({
                   label="Curso"
                   control={control}
                   error={errors.course_id}
-                  options={statusOptions}
+                  options={rowsCourseData as OptionType[]}
                   onOptionChange={handleStatusChange}
                 />
                 <SelectCustomZod

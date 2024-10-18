@@ -28,7 +28,7 @@ export const useAdmin = (): UseAdminReturn => {
         setError(result.error)
       } else {
         setError(result.error)
-        setResData(result.data) // Se for sucesso, salvar os dados da resposta
+        setResData(result.data as AdminInterface) // Se for sucesso, salvar os dados da resposta
       }
       setResponse(result.msg)
     } catch (err: any) {
@@ -49,9 +49,9 @@ export const useAdmin = (): UseAdminReturn => {
         setResData(null)
       } else {
         setError(result.error) // Se houver erro, definir a mensagem de erro
-        setResData(result.data) // Se for sucesso, salvar os dados da resposta
+        setResData(result.data as AdminInterface) // Se for sucesso, salvar os dados da resposta
       }
-      console.log(`========= ${result.data}`)
+      console.log(result)
       setResponse(result.msg) // Se houver erro, definir a mensagem de erro
     } catch (err: any) {
       setError(true)
@@ -70,7 +70,7 @@ export const useAdmin = (): UseAdminReturn => {
         setResData(null)
       } else {
         setError(result.error)
-        setResData(result.data)
+        setResData(result.data as AdminInterface)
       }
       setResponse(result.msg)
     } catch (err: any) {
@@ -89,7 +89,7 @@ export const useAdmin = (): UseAdminReturn => {
         setResData(null)
       } else {
         setError(result.error)
-        setResData(result.data)
+        setResData(result.data as AdminInterface)
       }
       setResponse(result.msg)
     } catch (err: any) {

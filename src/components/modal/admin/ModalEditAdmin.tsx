@@ -1,15 +1,24 @@
-import Modal from 'react-modal'
+import { useState } from 'react'
+import { BeatLoader } from 'react-spinners'
 
+// Lib
+import Modal from 'react-modal'
+import { ToastContainer } from 'react-toastify'
+// Icon
+import { X } from 'lucide-react'
 // Form
+import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
 
+// Style
 import { customStylesModalCenter } from '../../../styles/custom/modals'
-import { X } from 'lucide-react'
 import { CustomInput } from '../../input/InputLabel'
-import { useEffect, useState } from 'react'
 import { SelectCustomZod } from '../../selects/SelectCustomZod'
+import { AdminInterface } from '../../../interfaces/IAdmin'
+import { showToast } from '../../../utils/toasts'
+import uploadViewModel from '../../../services/ViewModel/uploadViewModel'
+import AdminViewModel from '../../../services/ViewModel/AdminViewModel'
 
 type OptionType = {
   value: string
@@ -84,8 +93,15 @@ export function ModalEditAdmin({
   handleUpdateListing,
   setModalEditRowIsOpen
 }: modalType) {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [imagesSelect, setImagesSelect] = useState<string>(baseInfo.photo)
+  const [uploading, setUploading] = useState<boolean>(false)
+
+  const [isSend, setIsSend] = useState<boolean>(false)
+
+  // Image
+  const [selectedFile, setSelectedFile] = useState<string>('')
+  const [imagesSelect, setImagesSelect] = useState<string>(
+    baseInfo.photo as string
+  )
 
   const genderOptions: OptionType[] = [
     { value: 'male', label: 'Masculino' },
@@ -116,6 +132,7 @@ export function ModalEditAdmin({
     resolver: zodResolver(formSchema)
   })
 
+  // Modal
   function closeModal() {
     setModalEditRowIsOpen(false)
   }
@@ -123,6 +140,7 @@ export function ModalEditAdmin({
     // references are now sync'd and can be accessed.
   }
 
+  // OnChange
   const onImageChange = (e: any) => {
     const [file] = e.target.files
     const photo = e.target.files[0]
@@ -130,6 +148,7 @@ export function ModalEditAdmin({
     setImagesSelect(URL.createObjectURL(file))
   }
 
+  // Select
   const handleGenderChange = (gender: string) => {
     // setGender(gender)
     console.log(`Selected Gender: ${gender}`)
@@ -140,9 +159,59 @@ export function ModalEditAdmin({
     console.log(`Selected Status: ${status}`)
   }
 
-  async function handleLogin(dataForm: any) {
-    alert('sss')
-    console.log(dataForm)
+  // Function Submit Form
+  async function handleSubmitForm(dataForm: any) {
+    if (dataForm.password !== dataForm.confirm_password) {
+      showToast('error', 'As palavras pass não convidem')
+      return
+    }
+
+    setIsSend(true)
+
+    let imageUrl: string | undefined = ''
+
+    if (selectedFile) {
+      const imageData = new FormData()
+      imageData.append('imageAdmin', selectedFile)
+
+      const responseUpload = await uploadViewModel.uploadAdminPhoto(imageData)
+
+      if (responseUpload.error) {
+        showToast('error', responseUpload.msg as string)
+        setIsSend(false)
+        return
+      }
+
+      imageUrl = responseUpload.url ? responseUpload.url : ''
+    }
+
+    try {
+      // Cria os dados para o admin
+      const dataToSave: AdminInterface = {
+        ...dataForm,
+        photo: imageUrl
+      }
+
+      // Tenta criar o admin com os dados salvos
+      const resultSubmit = await AdminViewModel.updateAdmin(
+        baseInfo.id,
+        dataToSave
+      )
+
+      if (resultSubmit.error) {
+        showToast('error', resultSubmit.msg)
+      } else {
+        showToast('success', resultSubmit.msg)
+        setTimeout(() => {
+          setIsSend(false)
+          closeModal()
+        }, 4000)
+
+        handleUpdateListing()
+      }
+    } catch (error) {
+      showToast('error', String(error) as string)
+    }
   }
 
   return (
@@ -156,6 +225,8 @@ export function ModalEditAdmin({
         contentLabel="Example Modal"
       >
         <div className="w-full h-full flex items-center justify-center ">
+          <ToastContainer />
+
           <div className="w-full h-auto max-h-[90%] max-w-3xl flex flex-col items-center p-0  rounded-md overflow-y-auto bg-dark overflow-x-hidden scroll-smooth">
             <div className="w-full py-4 px-5 flex flex-row justify-between items-center border-b-[1px] border-gray-600 ">
               <p className="text-xl font-medium text-light">
@@ -171,7 +242,7 @@ export function ModalEditAdmin({
             </div>
 
             <form
-              onSubmit={handleSubmit(handleLogin)}
+              onSubmit={handleSubmit(handleSubmitForm)}
               className="w-full p-6 flex flex-col justify-center items-center gap-6"
             >
               <div className="w-full flex flex-col items-start justify-start">
@@ -301,9 +372,16 @@ export function ModalEditAdmin({
               <div className="w-full pt-4 flex flex-row justify-between items-center border-t-[1px] border-gray-600 ">
                 <button
                   type="submit"
+                  disabled={isSend}
                   className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-2 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
                 >
-                  Salvar alterações
+                  {isSend && (
+                    <>
+                      <BeatLoader color="white" size={10} />
+                    </>
+                  )}
+
+                  {!isSend && <span>Salvar alterações</span>}
                 </button>
               </div>
             </form>

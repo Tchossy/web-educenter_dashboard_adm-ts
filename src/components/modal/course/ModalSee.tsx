@@ -58,7 +58,7 @@ export function ModalSeeCourse({
   setModalSeeRowIsOpen
 }: modalSeeType) {
   // Photo
-  const imagesSelect = baseInfo.photo as string
+  const imagesSelect = baseInfo.image as string
 
   // Const
   const namePageSingular = 'curso'

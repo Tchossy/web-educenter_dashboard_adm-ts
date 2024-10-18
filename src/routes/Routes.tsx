@@ -31,6 +31,8 @@ import { Task } from '../pages/main/task/task'
 import { TaskSubmission } from '../pages/main/task/taskSubmission'
 import { TaskCreate } from '../pages/main/task/taskCreate'
 import { TaskCheck } from '../pages/main/task/taskCheck'
+import { TaskEdit } from '../pages/main/task/taskEdit'
+import { ExamEdit } from '../pages/main/exam/examEdit'
 
 // const Home = React.lazy(() => import('../pages/main/home'))
 export function Router() {
@@ -133,7 +135,7 @@ export function Router() {
             element={
               <React.Suspense fallback={<Loading />}>
                 <Private>
-                  <Exam />
+                  <ExamEdit />
                 </Private>
               </React.Suspense>
             }
@@ -179,6 +181,17 @@ export function Router() {
               <React.Suspense fallback={<Loading />}>
                 <Private>
                   <TaskCreate />
+                </Private>
+              </React.Suspense>
+            }
+          />
+          {/* Tasks Edit */}
+          <Route
+            path={routsNameMain.task.edit}
+            element={
+              <React.Suspense fallback={<Loading />}>
+                <Private>
+                  <TaskEdit />
                 </Private>
               </React.Suspense>
             }
