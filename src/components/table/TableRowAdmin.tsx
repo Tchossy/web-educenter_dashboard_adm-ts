@@ -20,7 +20,7 @@ const TableRow: React.FC<TableRowProps> = ({
   openModalEditRow,
   handleDeleteRow
 }) => {
-  const labelStatus = rowItem.status == 'active' ? 'Ativo' : 'Desativo'
+  const labelStatus = rowItem.status == 'active' ? 'Ativo' : 'Inativo'
   const labelGender = rowItem.gender == 'male' ? 'Masculino' : 'Feminino'
   return (
     <motion.tr

@@ -13,13 +13,14 @@ import { zodResolver } from '@hookform/resolvers/zod'
 
 // Services
 import uploadViewModel from '../../../services/ViewModel/uploadViewModel'
-import StudentViewModel from '../../../services/ViewModel/StudentViewModel'
+import CourseViewModel from '../../../services/ViewModel/CourseViewModel'
+
 // Interfaces
 import { CourseInterface } from '../../../interfaces/ICourseInterface'
 // Type
 import { modalEditeType } from '../../../types/modal'
 // Data
-import { genderOptions, statusOptions } from '../../../data/selectOption'
+import { statusOptions } from '../../../data/selectOption'
 // Utils
 import { showToast } from '../../../utils/toasts'
 
@@ -141,7 +142,7 @@ export function ModalEditCourse({
       }
 
       // Tenta criar o admin com os dados salvos
-      const resultSubmit = await StudentViewModel.update(
+      const resultSubmit = await CourseViewModel.update(
         baseInfo.id as string,
         dataToSave
       )

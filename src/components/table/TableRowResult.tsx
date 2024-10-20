@@ -1,27 +1,32 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { FiEdit } from 'react-icons/fi'
 import { AiFillDelete } from 'react-icons/ai'
 import { BadgeAction } from '../badge/BadgeAction'
 import { BadgeSimple } from '../badge/BadgeSimple'
 import { Eye, ListChecks } from 'lucide-react'
 import { ExamResultInterface } from '../../interfaces/IExamResultInterface'
 import { routsNameMain } from '../../data/routsName'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { ExamInterface } from '../../interfaces/IExamInterface'
+import ExamViewModel from '../../services/ViewModel/ExamViewModel'
+import { showToast } from '../../utils/toasts'
+import StudentViewModel from '../../services/ViewModel/StudentViewModel'
+import { StudentInterface } from '../../interfaces/IStudentInterface'
 
 interface TableRowProps {
   rowItem: ExamResultInterface
   handleDeleteRow: (action: string) => void
-  openModalSeeRow: (action: any) => void
-  openModalEditRow: (action: any) => void
 }
 
 export const TableRowResult: React.FC<TableRowProps> = ({
   rowItem,
-  openModalSeeRow,
-  openModalEditRow,
   handleDeleteRow
 }) => {
+  const [rowExamData, setRowExamData] = useState<ExamInterface | null>(null)
+  const [rowStudentData, setRowStudentData] = useState<StudentInterface | null>(
+    null
+  )
+
   const labelStatus = rowItem.status == 'checked' ? 'Corrigida' : 'Pendente'
   const colorStatus = rowItem.status == 'checked' ? 'blue' : 'orange'
   const resultStatus =
@@ -36,15 +41,56 @@ export const TableRowResult: React.FC<TableRowProps> = ({
       : rowItem.result == 'pending'
       ? 'orange'
       : 'red'
+  // Function Exam
+  async function fetchExamData() {
+    // Clear
+    setRowExamData(null)
 
+    // Get
+    await ExamViewModel.getOne(rowItem?.exam_id as string).then(response => {
+      if (response.error) {
+        showToast('error', response.msg as string)
+        console.log('error', response.msg)
+      } else {
+        const arrayData = response.data as ExamInterface
+        const listData = arrayData
+
+        setRowExamData(listData)
+      }
+    })
+  }
+  // Function Student
+  async function fetchStudentData() {
+    // Clear
+    setRowStudentData(null)
+
+    // Get
+    await StudentViewModel.getOne(rowItem?.student_id as string).then(
+      response => {
+        if (response.error) {
+          showToast('error', response.msg as string)
+          console.log('error', response.msg)
+        } else {
+          const arrayData = response.data as StudentInterface
+          const listData = arrayData
+
+          setRowStudentData(listData)
+        }
+      }
+    )
+  }
+  useEffect(() => {
+    fetchExamData()
+    fetchStudentData()
+  }, [])
   return (
     <motion.tr className="border-b dark:border-gray-700 hover:bg-gray-100/40 dark:hover:bg-gray-700/40 transition-all duration-300 cursor-pointer">
       <td className="px-3 py-3 min-w-[6rem]">#{rowItem.id}</td>
       <td className="px-3 py-3 min-w-[6rem] max-w-[20rem]">
-        {rowItem.exam_id}
+        {rowExamData?.name}
       </td>
       <td className="px-3 py-3 min-w-[6rem] max-w-[20rem]">
-        {rowItem.student_id}
+        {`${rowStudentData?.first_name} ${rowStudentData?.last_name}`}
       </td>
       <td className="px-3 py-3 min-w-[6rem] max-w-[20rem]">
         {rowItem.status == 'checked' ? `${rowItem.score}%` : '-----'}
@@ -60,20 +106,14 @@ export const TableRowResult: React.FC<TableRowProps> = ({
       </td>
       <td className="px-3 py-3 min-w-[6rem]">
         <div className="flex gap-4">
-          <Link
-            to={`${routsNameMain.exam.checkString}/${rowItem.student_id}/${rowItem.exam_id}`}
-          >
+          <Link to={`${routsNameMain.exam.checkString}/${rowItem.id}`}>
             <BadgeAction
               color="green"
               icon={ListChecks}
-              onclickBtn={() => openModalEditRow(rowItem)}
+              onclickBtn={() => null}
             />
           </Link>
-          <BadgeAction
-            color="blue"
-            icon={Eye}
-            onclickBtn={() => openModalSeeRow(rowItem)}
-          />
+          {/* <BadgeAction color="blue" icon={Eye} onclickBtn={() => null} /> */}
           <BadgeAction
             color="red"
             icon={AiFillDelete}

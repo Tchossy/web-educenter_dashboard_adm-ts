@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 // Form
 import { useForm } from 'react-hook-form'
@@ -10,17 +10,31 @@ import { SendHorizontal } from 'lucide-react'
 
 // Data
 import { routsNameMain } from '../../../data/routsName'
-import { examAnswers } from '../../../data/tableData'
 
 // Components
 import { Breadcrumbs } from '../../../components/Breadcrumbs'
 import { BadgeSimple } from '../../../components/badge/BadgeSimple'
-import { InputLabelSimple } from '../../../components/input/InputLabelSimple'
 import { TextAreaLabelSimple } from '../../../components/input/TextAreaLabelSimple'
 
 // Type
-import { TaskType } from '../../../types/enum'
-import { InputCheckbox } from '../../../components/input/InputCheckbox'
+import { useNavigate, useParams } from 'react-router-dom'
+import { ExamInterface } from '../../../interfaces/IExamInterface'
+import { CourseInterface } from '../../../interfaces/ICourseInterface'
+import { ModuleInterface } from '../../../interfaces/IModuleInterface'
+import ExamResultViewModel from '../../../services/ViewModel/ExamResultViewModel'
+import { showToastBottom } from '../../../utils/toasts'
+import { ExamResultInterface } from '../../../interfaces/IExamResultInterface'
+import { StudentInterface } from '../../../interfaces/IStudentInterface'
+import StudentViewModel from '../../../services/ViewModel/StudentViewModel'
+import ExamViewModel from '../../../services/ViewModel/ExamViewModel'
+import CourseViewModel from '../../../services/ViewModel/CourseViewModel'
+import ModuleViewModel from '../../../services/ViewModel/ModuleViewModel'
+import { ExamQuestionInterface } from '../../../interfaces/IExamQuestionInterface'
+import ExamAnswerViewModel from '../../../services/ViewModel/ExamAnswerViewModel'
+import { ExamAnswerInterface } from '../../../interfaces/IExamAnswerInterface'
+import { ExamAnswers } from './components/ExamAnswers'
+import { BeatLoader } from 'react-spinners'
+import { converter } from '../../../utils/converter'
 
 const formSchema = z.object({
   name: z
@@ -77,19 +91,45 @@ const formSchema = z.object({
 type formType = z.infer<typeof formSchema>
 
 export function ExamCheck() {
+  // Params
+  const { resultId } = useParams()
+
+  const navigate = useNavigate()
+
+  const handleNavigation = (page: string) => {
+    navigate(page) // Navega para a página "/about"
+  }
+
+  // Loading
+  const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [isSending, setIsSending] = useState<boolean>(false)
+
+  // Data
+  const [rowExamResultData, setRowExamResultData] =
+    useState<ExamResultInterface | null>(null)
+
+  const [rowExamData, setRowExamData] = useState<ExamInterface | null>(null)
+  const [rowStudentData, setRowStudentData] = useState<StudentInterface | null>(
+    null
+  )
+  const [rowCourseData, setRowCourseData] = useState<CourseInterface | null>(
+    null
+  )
+  const [rowModuleData, setRowModuleData] = useState<ModuleInterface | null>(
+    null
+  )
+  const [examAnswersData, setExamAnswersData] = useState<ExamAnswerInterface[]>(
+    []
+  )
+
   // State
   const [isSend, setIsSend] = useState<boolean>(false)
-  const [taskType, setTaskType] = useState<TaskType>('online')
-
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [selectedTaskFile, setSelectedTaskFile] = useState<File | null>(null)
-  const [imagesSelect, setImagesSelect] = useState<string>('')
+  const [isSendingFeedback, setIsSendingFeedback] = useState<boolean>(false)
+  const [feedbackText, setFeedbackText] = useState<string>('')
 
   // Const
   const namePageEntry = 'Correção do exame'
   const namePageUppercase = 'Exames'
-
-  const status = 'checked'
 
   // List Array
   const itemsBreadcrumbs = [
@@ -108,192 +148,330 @@ export function ExamCheck() {
     resolver: zodResolver(formSchema)
   })
 
-  // OnChange
-  const onImageChange = (e: any) => {
-    const [file] = e.target.files
-    const photo = e.target.files[0]
-    setSelectedFile(photo)
-    setImagesSelect(URL.createObjectURL(file))
+  // Exam Result
+  async function fetchExamResultData() {
+    setIsLoading(true)
+
+    // Clear
+    setRowExamResultData(null)
+
+    // Get
+    await ExamResultViewModel.getOne(resultId as string)
+      .then(response => {
+        if (response.error) {
+          showToastBottom('error', response.msg as string)
+          console.log(response.error)
+        } else {
+          const dataResult = response.data as unknown as ExamResultInterface
+
+          setRowExamResultData(dataResult as ExamResultInterface)
+          fetchExamData(dataResult?.exam_id as string)
+          fetchStudentData(dataResult?.student_id as string)
+          fetchSubmittedAnswers(dataResult?.exam_id, dataResult?.student_id)
+        }
+        setIsLoading(false)
+      })
+      .catch(err => {
+        showToastBottom('error', err as string)
+        setIsLoading(false)
+      })
   }
-  const onTaskPdfChange = (e: any) => {
-    const [file] = e.target.files
-    const pdf = e.target.files[0]
-    setSelectedTaskFile(pdf)
+  // Function Exam
+  async function fetchExamData(examId: string) {
+    // Clear
+    setRowExamData(null)
+
+    // Get
+    await ExamViewModel.getOne(examId).then(response => {
+      if (response.error) {
+        showToastBottom('error', response.msg as string)
+        console.log('error', response.msg)
+      } else {
+        const arrayData = response.data as ExamInterface
+        const listData = arrayData
+
+        fetchCourseData(listData?.course_id as string)
+        fetchModuleData(listData?.module_id as string)
+
+        setRowExamData(listData)
+      }
+    })
   }
-  const handleTaskTypeChange = (value: any) => {
-    setTaskType(value)
+  // Function Student
+  async function fetchStudentData(studentId: string) {
+    // Clear
+    setRowStudentData(null)
+
+    // Get
+    await StudentViewModel.getOne(studentId).then(response => {
+      if (response.error) {
+        showToastBottom('error', response.msg as string)
+        console.log('error', response.msg)
+      } else {
+        const arrayData = response.data as StudentInterface
+        const listData = arrayData
+
+        setRowStudentData(listData)
+      }
+    })
   }
-  const handleStatusChange = (gender: string) => {
-    // setState(gender)
-    console.log(`Selected State: ${gender}`)
+  // Function Course
+  async function fetchCourseData(courseID: string) {
+    // Clear
+    setRowCourseData(null)
+
+    // Get
+    await CourseViewModel.getOne(courseID).then(response => {
+      if (response.error) {
+        showToastBottom('error', response.msg as string)
+        console.log('error', response.msg)
+      } else {
+        const arrayData = response.data as CourseInterface
+        const listData = arrayData
+
+        setRowCourseData(listData)
+      }
+    })
+  }
+  // Function Module
+  async function fetchModuleData(moduleID: string) {
+    // Clear
+    setRowModuleData(null)
+
+    // Get
+    await ModuleViewModel.getOne(moduleID).then(response => {
+      if (response.error) {
+        showToastBottom('error', response.msg as string)
+        console.log('error', response.msg)
+      } else {
+        const arrayData = response.data as ModuleInterface
+        const listData = arrayData
+
+        setRowModuleData(listData)
+      }
+    })
   }
 
-  // Funtion
-  const handleSubmitForm = async (data: formType) => {
-    console.log('Formulário enviado com sucesso', data)
-    try {
-      setIsSend(true)
-      // Adicionar lógica de envio, como uma requisição para a API
-    } catch (error) {
-      console.error('Erro ao enviar o formulário', error)
-    } finally {
-      setIsSend(false)
+  async function fetchSubmittedAnswers(examId: string, studentId: string) {
+    const response = await ExamAnswerViewModel.getAllByExamAndStudent(
+      examId,
+      studentId
+    )
+
+    if (!response.error) {
+      const arrayData = response.data as unknown as ExamAnswerInterface[]
+      const listData = arrayData
+
+      setExamAnswersData(listData)
+    } else {
+      showToastBottom('error', response.msg)
     }
+  }
+
+  useEffect(() => {
+    fetchExamResultData()
+  }, [])
+
+  const handleTextFeedback = (text: string) => {
+    setFeedbackText(text)
+  }
+  const handleSubmitFeedback = async () => {
+    setIsSendingFeedback(true)
+
+    const dataToSave = {
+      // exam_id: '',
+      // student_id: '',
+      feedback: feedbackText
+    }
+
+    const resultSubmit = await ExamResultViewModel.update(
+      rowExamResultData?.id as string,
+      dataToSave
+    )
+
+    if (resultSubmit.error) {
+      showToastBottom('error', resultSubmit.msg)
+      setIsSendingFeedback(false)
+    } else {
+      showToastBottom('success', 'Feedback enviado com sucesso')
+
+      setTimeout(() => {
+        setIsSendingFeedback(false)
+      }, 2000)
+    }
+  }
+  const handleSubmitMark = async () => {
+    setIsSend(true)
+
+    const totalMarks = examAnswersData.reduce((acc, answer) => {
+      const answerMark = converter.stringToNumber(answer.mark)
+      return acc + (answerMark || 0) // Soma o valor de 'mark' ou 0 se for indefinido
+    }, 0)
+
+    const markResult = totalMarks >= 79.5 ? 'approved' : 'failed'
+    const dataToSave = {
+      // exam_id: '',
+      // student_id: '',
+      result: markResult,
+      status: 'checked',
+      score: converter.numberToString(totalMarks)
+    }
+
+    const resultSubmit = await ExamResultViewModel.update(
+      rowExamResultData?.id as string,
+      dataToSave
+    )
+
+    if (resultSubmit.error) {
+      showToastBottom('error', resultSubmit.msg)
+      setIsSend(false)
+    } else {
+      showToastBottom('success', 'Exame corrigido')
+
+      setTimeout(() => {
+        handleNavigation(`${routsNameMain.exam.result}`)
+        setIsSend(false)
+      }, 2000)
+    }
+  }
+  // Função chamada quando as respostas forem atualizadas
+  const handleUpdatedAnswers = (updatedAnswers: ExamAnswerInterface[]) => {
+    setExamAnswersData(updatedAnswers)
   }
 
   return (
     <div className="w-full h-full flex flex-col justify-start items-start gap-6">
-      <div className="w-full flex flex-row items-center justify-between gap-2 ">
-        <div className="w-full flex flex-col items-start justify-between gap-4">
-          <Breadcrumbs items={itemsBreadcrumbs} />
-          <h1 className="text-2xl font-bold text-dark dark:text-light ">
-            {namePageEntry}
-          </h1>
-        </div>
-      </div>
+      {!isLoading && rowExamResultData && (
+        <>
+          <div className="w-full flex flex-row items-center justify-between gap-2 ">
+            <div className="w-full flex flex-col items-start justify-between gap-4">
+              <Breadcrumbs items={itemsBreadcrumbs} />
+              <h1 className="text-2xl font-bold text-dark dark:text-light ">
+                {namePageEntry}
+              </h1>
+            </div>
+          </div>
 
-      <div className="w-full p-6 flex flex-col justify-start items-start gap-6 rounded-md bg-light dark:bg-dark">
-        <div className="w-full h-full flex items-center justify-center ">
-          <form
-            onSubmit={handleSubmit(handleSubmitForm)}
-            className="w-full p-6 flex flex-col justify-center items-center gap-6"
-          >
-            <div className="w-full grid gap-6 md:grid-cols-3 rounded-2xl p-4 border-2">
-              <div className="flex flex-row items-center justify-start">
-                <div className="w-20 h-20 flex flex-col items-center justify-center border-2 border-gray-300 border-dashed rounded-full cursor-pointer bg-gray-70 dark:hover:bg-bray-800 dark:bg-gray-700 hover:bg-gray-100/80 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600 transition-all duration-300 relative overflow-hidden">
-                  <img
-                    className=" w-full h-full object-cover absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 transition-transform duration-300"
-                    src="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
-                    alt="Tchossy"
-                  />
-                </div>
-                <div className="ml-4 flex flex-col">
-                  <h4 className="text-2xl font-semibold text-center md:text-left">
-                    Leroy Jenkins
-                  </h4>
-                  <p className="">joao.silva@example.com</p>
-                </div>
-              </div>
-
-              <div className="w-full flex flex-1 flex-col items-start justify-center gap-3">
-                <p className="">
-                  <span className="font-semibold">Curso:</span>
-                  <span> Desenvolvimento Web </span>
-                </p>
-
-                <p className="">
-                  <span className="font-semibold">Módulo:</span>
-                  <span> Fundamentos da Web </span>
-                </p>
-              </div>
-
-              <div className="w-full flex flex-1 flex-col items-start justify-center gap-3">
-                <div className="w-full flex flex-row items-center gap-3">
-                  <span className="font-semibold">Status do exame:</span>
-                  <div className="w-44 flex flex-row items-start gap-3">
-                    <BadgeSimple
-                      color={status == 'checked' ? 'green' : 'red'}
-                      label={
-                        status == 'checked'
-                          ? 'Exame já corrigido'
-                          : 'Exame por corrigir'
-                      }
-                    />
+          <div className="w-full p-6 flex flex-col justify-start items-start gap-6 rounded-md bg-light dark:bg-dark">
+            <div className="w-full h-full flex items-center justify-center ">
+              <div className="w-full p-6 flex flex-col justify-center items-center gap-6">
+                <div className="w-full grid gap-6 md:grid-cols-3 rounded-2xl p-4 border-2 border-gray-300 dark:border-gray-600">
+                  <div className="flex flex-row items-center justify-start">
+                    <div className="w-20 h-20 flex flex-col items-center justify-center border-2 border-gray-300 border-dashed rounded-full cursor-pointer bg-gray-70 dark:hover:bg-bray-800 dark:bg-gray-700 hover:bg-gray-100/80 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600 transition-all duration-300 relative overflow-hidden">
+                      <img
+                        className=" w-full h-full object-cover absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 transition-transform duration-300"
+                        src={rowStudentData ? rowStudentData.photo : ''}
+                        alt="Tchossy"
+                      />
+                    </div>
+                    <div className="ml-4 flex flex-col">
+                      <h4 className="text-2xl font-semibold text-center md:text-left">
+                        {rowStudentData
+                          ? `${rowStudentData.first_name} ${rowStudentData.last_name}`
+                          : ''}
+                      </h4>
+                      <p className="">
+                        {rowStudentData ? rowStudentData.email : ''}
+                      </p>
+                    </div>
                   </div>
-                </div>
-                <p className="">
-                  <span className="font-semibold">Data de entrega:</span>
-                  <span> 2024-12-15</span>
-                </p>
-              </div>
-            </div>
 
-            <div className="w-full flex flex-1 flex-row items-end gap-3">
-              <TextAreaLabelSimple
-                isDisabled={true}
-                htmlFor={`feedback`}
-                label={`Feedback para o aluno`}
-                onChange={() => null}
-              />
-              <button
-                onClick={() => null}
-                className="w-[12rem] h-[2.9rem] px-3 rounded-lg bg-blue-500 text-white hover:bg-blue-600 active:bg-blue-900 flex flex-row items-center justify-center gap-2 transition-all duration-300 "
-              >
-                Enviar feedback
-                <SendHorizontal size={18} />
-              </button>
-            </div>
+                  <div className="w-full flex flex-1 flex-col items-start justify-center gap-3">
+                    <p className="">
+                      <span className="font-semibold">Curso:</span>
+                      <span> {rowCourseData ? rowCourseData.name : ''} </span>
+                    </p>
 
-            <div className="w-full flex flex-1 flex-col items-start justify-center gap-1">
-              <label className="block mb-2 text-lg font-medium dark:text-light text-gray-600">
-                Questões
-              </label>
+                    <p className="">
+                      <span className="font-semibold">Módulo:</span>
+                      <span> {rowModuleData ? rowModuleData.name : ''} </span>
+                    </p>
+                  </div>
 
-              <div className="w-full gap-4 p-4 border rounded-md">
-                {examAnswers.map((answer, answerIndex) => {
-                  const currentIndex = answerIndex + 1
-                  return (
-                    <div className="w-full my-4 flex flex-1 flex-row gap-3">
-                      <div className="flex flex-1">
-                        <TextAreaLabelSimple
-                          isDisabled={true}
-                          htmlFor={`answer_${answer.id}`}
-                          label={`Questão ${currentIndex}: ${answer.question_title}`}
-                          value={`Resposta: ${answer.answer}`}
-                          onChange={() => null}
+                  <div className="w-full flex flex-1 flex-col items-start justify-center gap-3">
+                    <div className="w-full flex flex-row items-center gap-3">
+                      <span className="font-semibold">Status do exame:</span>
+                      <div className="w-44 flex flex-row items-start gap-3">
+                        <BadgeSimple
+                          color={
+                            rowExamResultData?.status == 'checked'
+                              ? 'green'
+                              : 'red'
+                          }
+                          label={
+                            rowExamResultData?.status == 'checked'
+                              ? 'Exame já corrigido'
+                              : 'Exame por corrigir'
+                          }
                         />
                       </div>
-
-                      <div className="flex flex-row gap-3 items-end">
-                        <div className="">
-                          <InputCheckbox
-                            htmlFor="is_valid"
-                            label="Correta"
-                            value={answer.is_correct} // Valor inicial
-                            onChange={isChecked =>
-                              console.log(
-                                `Checkbox ${answer.id} marcado:`,
-                                isChecked
-                              )
-                            } // Função para capturar a mudança
-                          />
-                        </div>
-
-                        <div className="w-full max-w-[6rem]">
-                          <InputLabelSimple
-                            type="number"
-                            htmlFor="name"
-                            label={`Cotação`}
-                            value={answer.mark}
-                            // isDisabled={answer.is_correct}
-                            onChange={() => null}
-                          />
-                        </div>
-
-                        <button
-                          onClick={() => null}
-                          className="w-[4rem] h-[2.6rem] px-3 rounded-lg bg-blue-500 text-white hover:bg-blue-600 active:bg-blue-900 flex flex-row items-center justify-center gap-2 transition-all duration-300 "
-                        >
-                          Salvar
-                        </button>
-                      </div>
                     </div>
-                  )
-                })}
+                    <p className="">
+                      <span className="font-semibold">Data de entrega:</span>
+                      <span> {rowExamResultData?.submission_date} </span>
+                    </p>
+                  </div>
+                </div>
+
+                <div className="w-full flex flex-1 flex-row items-end gap-3">
+                  <TextAreaLabelSimple
+                    htmlFor={`feedback`}
+                    label={`Feedback para o aluno`}
+                    defaultValue={
+                      rowExamResultData ? rowExamResultData.feedback : ''
+                    }
+                    onChange={handleTextFeedback}
+                  />
+                  <button
+                    disabled={isSendingFeedback}
+                    onClick={handleSubmitFeedback}
+                    className="w-[12rem] h-[2.9rem] px-3 rounded-lg bg-blue-500 text-white hover:bg-blue-600 active:bg-blue-900 flex flex-row items-center justify-center gap-2 transition-all duration-300 "
+                  >
+                    {isSendingFeedback && (
+                      <>
+                        <BeatLoader color="white" size={10} />
+                      </>
+                    )}
+                    {!isSendingFeedback && (
+                      <>
+                        Enviar feedback
+                        <SendHorizontal size={18} />
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                <div className="w-full flex flex-1 flex-col items-start justify-center gap-1">
+                  <label className="block mb-2 text-lg font-medium dark:text-light text-gray-600">
+                    Questões
+                  </label>
+
+                  <ExamAnswers
+                    examAnswersData={examAnswersData}
+                    onAnswersUpdate={handleUpdatedAnswers}
+                  />
+                </div>
+
+                <div className="w-full">
+                  <button
+                    disabled={isSend}
+                    onClick={handleSubmitMark}
+                    type="button"
+                    className="w-[16rem] h-[2.6rem] min-w-[12rem] px-3 rounded-lg bg-primary-200 text-white hover:bg-primary-500 active:bg-primary-700 flex flex-row items-center justify-center gap-2 transition-all duration-300"
+                  >
+                    {isSend && (
+                      <>
+                        <BeatLoader color="white" size={10} />
+                      </>
+                    )}
+                    {!isSend && <>Salvar como corrigido</>}
+                  </button>
+                </div>
               </div>
             </div>
-
-            <div className="w-full">
-              <button
-                type="submit"
-                className="w-[16rem] h-[2.6rem] min-w-[12rem] px-3 rounded-lg bg-primary-200 text-white hover:bg-primary-500 active:bg-primary-700 flex flex-row items-center justify-center gap-2 transition-all duration-300"
-              >
-                Salvar como corrigido
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }

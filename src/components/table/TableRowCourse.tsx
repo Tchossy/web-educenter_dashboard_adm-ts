@@ -20,7 +20,7 @@ const TableRowCourse: React.FC<TableRowProps> = ({
   openModalEditRow,
   handleDeleteRow
 }) => {
-  const labelStatus = rowItem.status == 'active' ? 'Ativo' : 'Desativo'
+  const labelStatus = rowItem.status == 'active' ? 'Ativo' : 'Inativo'
 
   return (
     <motion.tr className="border-b dark:border-gray-700 hover:bg-gray-100/40 dark:hover:bg-gray-700/40 transition-all duration-300 cursor-pointer">

@@ -168,6 +168,9 @@ class StudentViewModel {
         data
       )
 
+      console.log('==============')
+      console.log(response)
+
       if (response.error) {
         return {
           error: true,

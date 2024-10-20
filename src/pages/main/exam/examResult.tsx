@@ -1,12 +1,18 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 // LIBS
+import { Link } from 'react-router-dom'
 import swal from 'sweetalert'
 import { IoSearchSharp } from 'react-icons/io5'
 
+// Icon
+import { Plus } from 'lucide-react'
+
 // Data
 import { routsNameMain } from '../../../data/routsName'
-import { FileDown, Plus } from 'lucide-react'
+
+// Services
+import ExamResultViewModel from '../../../services/ViewModel/ExamResultViewModel'
 
 // Table
 import { TableRowResult } from '../../../components/table/TableRowResult'
@@ -15,18 +21,24 @@ import { TableRowResult } from '../../../components/table/TableRowResult'
 import { SelectCustom } from '../../../components/selects/SelectCustom'
 import { Breadcrumbs } from '../../../components/Breadcrumbs'
 import { InputWithButton } from '../../../components/input/InputWithButton'
+import ExportToExcel from '../../../components/ExportToExcel'
 
-// Modals
-import { examResultData } from '../../../data/tableData'
+// Interface
+import { ExamResultInterface } from '../../../interfaces/IExamResultInterface'
+import { showToast } from '../../../utils/toasts'
 
 export function Result() {
   // State
-  const [modalEditRowIsOpen, setModalEditRowIsOpen] = useState<boolean>(false)
-  const [modalSeeRowIsOpen, setModalSeeRowIsOpen] = useState<boolean>(false)
-  const [modalCreateRowIsOpen, setModalCreateRowIsOpen] =
-    useState<boolean>(false)
-  const [rowSelect, setRowSelect] = useState<any | null>(null)
+  const [rowsData, setRowsData] = useState<ExamResultInterface[] | null>(null)
+  const [dataToExport, setDataToExport] = useState<any[]>([])
+
   const [selectedValue, setSelectedValue] = useState('8')
+
+  // Search
+  const [termForSearch, setTermForSearch] = useState<string>('')
+
+  const [docsPerPage, setDocsPerPage] = useState<string>('8')
+  const [totalDocs, setTotalDocs] = useState<number>(0)
 
   // Consts
   const namePageUppercase = 'Resultados'
@@ -48,70 +60,116 @@ export function Result() {
     { value: '30', label: '30' },
     { value: 'Todos', label: 'Todos' }
   ]
-  const rowsTable = examResultData.map((item, index) => {
+  const rowsTable = rowsData?.map((item, index) => {
     return (
       <TableRowResult
         key={index}
         rowItem={item}
-        openModalSeeRow={openModalSeeRow} // Substitua pelo seu código real
-        openModalEditRow={openModalEditRow} // Substitua pelo seu código real
-        handleDeleteRow={handleDeleteRow} // Substitua pelo seu código real
+        handleDeleteRow={handleDeleteRow}
       />
     )
   })
 
   // Function
-  const fetchData = () => {
-    // fetchData()
+  async function fetchData(limit: string) {
+    // Clear
+    setRowsData(null)
+
+    // Get
+    await ExamResultViewModel.getAll().then(response => {
+      if (response.error) {
+        showToast('error', response.msg as string)
+      } else {
+        const arrayData = response.data as ExamResultInterface[]
+        setTotalDocs(arrayData.length)
+        console.log(response)
+
+        const listData = arrayData.slice(0, Number(limit))
+
+        setRowsData(listData as ExamResultInterface[])
+      }
+    })
   }
 
+  // Get more data
+  function fetchMoreData() {
+    const result = parseInt(docsPerPage) + parseInt(docsPerPage)
+    const str = result.toString()
+    fetchData(str)
+  }
+
+  // Search data
+  async function searchDocs() {
+    if (termForSearch == '') {
+      fetchData(docsPerPage)
+    } else {
+      ExamResultViewModel.getAllByTermData(termForSearch).then(response => {
+        setRowsData(response?.data as ExamResultInterface[])
+      })
+    }
+  }
+
+  // Delete row
   function handleDeleteRow(id: string) {
     swal({
       title: 'Tem certeza?',
-      text: 'Uma vez excluído, você não poderá recuperar este usuario!',
+      text: 'Uma vez excluído, você não poderá recuperar!',
       buttons: ['Cancelar', 'Confirmar'],
       icon: 'warning',
       dangerMode: true
     }).then(async willDelete => {
       if (willDelete) {
-        try {
-          // const response = await deleteEmployees(documentId)
+        await ExamResultViewModel.delete(id).then(response => {
+          console.log(response)
 
-          swal('Deletado com sucesso', {
-            icon: 'success'
-          })
-        } catch (error) {
-          swal(`Erro ao deletar registo: ${error}`, {
-            icon: 'error'
-          })
-          console.error('', error)
-        }
+          if (response.error) {
+            swal(`Erro ao deletar registo: ${response.msg}`, {
+              icon: 'error'
+            })
+            console.error('', response.msg)
+          } else {
+            swal('Deletado com sucesso', {
+              icon: 'success'
+            })
+
+            fetchData(docsPerPage)
+          }
+        })
       } else {
-        swal('O módulo está seguro!', {
+        swal('O registo está seguro!', {
           icon: 'error'
         })
       }
     })
   }
-  const handleUpdateListing = () => {
-    fetchData()
-  }
+
+  // Change rows per page
   const handleSelectChange = (value: string) => {
     setSelectedValue(value)
+    setDocsPerPage(value)
+    fetchData(value)
   }
 
-  // Modal
-  function openModalEditRow(item: any) {
-    setRowSelect(item)
-    setModalEditRowIsOpen(true)
-  }
-  function openModalCreateRow(item: any) {
-    setModalCreateRowIsOpen(true)
-  }
-  function openModalSeeRow(item: any) {
-    setRowSelect(item)
-    setModalSeeRowIsOpen(true)
-  }
+  useEffect(() => {
+    fetchData(docsPerPage)
+  }, [])
+
+  useEffect(() => {
+    const newData = rowsData?.map(doc => ({
+      Id: `${doc.id}`,
+      Exame: doc.exam_id,
+      Estudante: doc.student_id,
+      Pontuação: doc.score,
+      Status: doc.status,
+      Resultado: doc.result,
+      Feedback: doc.feedback,
+      submission_date: doc.submission_date,
+      Data_de_criacao: doc.date_create,
+      Ultima_atualização: doc.date_update
+    }))
+
+    setDataToExport(newData as any)
+  }, [rowsData])
 
   return (
     <div className="w-full h-full flex flex-col justify-start items-start gap-6">
@@ -124,20 +182,23 @@ export function Result() {
 
         <div className="w-full flex flex-row items-center justify-between gap-2 ">
           <div className="flex flex-row items-center justify-between gap-4">
-            <button className="py-2 px-4 rounded-lg border-[1px] border-gray-200 dark:border-gray-600 hover:bg-gray-300/20 dark:hover:bg-gray-500/20 active:bg-gray-200 flex flex-row items-center justify-center gap-4 transition-all duration-300">
-              <FileDown />
-              Exportar
-            </button>
+            <ExportToExcel
+              data={dataToExport}
+              filename="exam_result_data"
+              sheetName="Exame"
+              titlePage="Lista de resultados do exame"
+              imageSrc="http://localhost:5173/logo.png"
+              orientation="landscape"
+              scale={0.8}
+            />
           </div>
 
           <div className="w-full max-w-sm">
             <InputWithButton
+              onChange={e => setTermForSearch(e.target.value)}
               placeholder="Digite algo"
-              // buttonText="Enviar"
               icon={<IoSearchSharp size={20} />}
-              onButtonClick={() => {
-                // Lógica a ser executada quando o botão é clicado
-              }}
+              onButtonClick={searchDocs}
             />
           </div>
         </div>
@@ -162,10 +223,10 @@ export function Result() {
                   Estudante
                 </th>
                 <th scope="col" className="px-3 py-3 min-w-[6rem]">
-                  Resultado
+                  Pontuação
                 </th>
                 <th scope="col" className="px-3 py-3 min-w-[6rem]">
-                  Pontuação
+                  Resultado
                 </th>
                 <th scope="col" className="px-3 py-3 min-w-[6rem]">
                   Status
@@ -185,15 +246,15 @@ export function Result() {
             <p className="text-xs flex flex-row justify-start items-center gap-1">
               Mostrando
               <strong className="text-dark dark:text-light font-semibold">
-                1
+                {rowsData?.length !== undefined ? '1' : '0'}
               </strong>
               a
               <strong className="text-dark dark:text-light font-semibold">
-                8
+                {rowsData?.length !== undefined ? rowsData?.length : '0'}
               </strong>
               de
               <strong className="text-dark dark:text-light font-semibold">
-                21
+                {totalDocs}
               </strong>
               {namePageUppercase}
             </p>
@@ -209,6 +270,7 @@ export function Result() {
               </div>
 
               <button
+                onClick={fetchMoreData}
                 type="submit"
                 className="sm:w-auto text-xs font-medium text-dark px-5 py-2.5 text-center flex flex-row justify-center items-center gap-2 bg-gray-50 rounded-lg  border border-gray-300 focus:ring-blue-500 focus:border-blue-500 w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-light dark:focus:ring-blue-500 dark:focus:border-blue-500"
               >

@@ -158,9 +158,9 @@ export function ModalCreateExamQuestion({
         style={customStylesModalCenter}
         contentLabel="Example Modal"
       >
-        <div className="w-full h-full flex items-center justify-center ">
-          <ToastContainer />
+        <ToastContainer />
 
+        <div className="w-full h-full flex items-center justify-center ">
           <div className="w-full h-auto max-h-[90%] max-w-3xl flex flex-col items-center p-0  rounded-md overflow-y-auto bg-dark overflow-x-hidden scroll-smooth">
             <div className="w-full py-4 px-5 flex flex-row justify-between items-center border-b-[1px] border-gray-600 ">
               <p className="text-xl font-medium text-light">

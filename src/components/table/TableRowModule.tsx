@@ -28,7 +28,8 @@ const TableRowModule: React.FC<TableRowProps> = ({
     null
   )
 
-  const labelStatus = rowItem.status == 'active' ? 'Ativo' : 'Desativo'
+  const labelStatus = rowItem.status == 'active' ? 'Ativo' : 'Inativo'
+  const colorStatus = rowItem.status == 'active' ? 'blue' : 'red'
 
   // Function Course
   async function fetchCourseData() {
@@ -58,7 +59,7 @@ const TableRowModule: React.FC<TableRowProps> = ({
       <td className="px-3 py-3 min-w-[6rem] max-w-[20rem]">{rowItem.name}</td>
       <td className="px-3 py-3 min-w-[6rem]">{rowsCourseData?.name}</td>
       <td className="px-3 py-3 min-w-[6rem]">
-        <BadgeSimple color="blue" label={labelStatus} />
+        <BadgeSimple color={colorStatus} label={labelStatus} />
       </td>
       <td className="px-3 py-3 min-w-[6rem]">{rowItem.date_create}</td>
       <td className="px-3 py-3 min-w-[6rem]">

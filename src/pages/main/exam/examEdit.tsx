@@ -121,7 +121,8 @@ export function ExamEdit() {
   >(null)
 
   const [isLoading, setIsLoading] = useState<boolean>(true)
-  const [isSend, setIsSend] = useState<boolean>(false)
+  const [isSending, setIsSending] = useState<boolean>(false)
+  const [isSendingQuestion, setIsSendingQuestion] = useState<boolean>(false)
   const [uploading, setUploading] = useState<boolean>(false)
 
   const [rowsCourseData, setRowsCourseData] = useState<OptionType[]>([])
@@ -255,12 +256,14 @@ export function ExamEdit() {
 
   // Function Submit Form
   async function handleSubmitForm(dataForm: any) {
-    setIsSend(true)
+    setIsSending(true)
 
     try {
       let urlImageToSave = urlImageUploaded ? urlImageUploaded : ''
 
       if (selectedImageFile) {
+        console.log('selectedImageFile')
+
         if (!urlImageUploaded) {
           const resUrl = await handleUploadImage()
 
@@ -271,7 +274,7 @@ export function ExamEdit() {
 
           if (!urlImage) {
             showToastBottom('error', msgUpload)
-            setIsSend(false)
+            setIsSending(false)
             return
           }
         }
@@ -288,18 +291,18 @@ export function ExamEdit() {
       )
 
       if (resultSubmit.error) {
-        showToastBottom('error', resultSubmit.msg)
-        setIsSend(false)
+        console.log('error', resultSubmit.msg as string)
+        setIsSending(false)
       } else {
-        showToastBottom('success', resultSubmit.msg)
+        console.log('success', 'Exame atualizado com sucesso')
 
         setTimeout(() => {
-          setIsSend(false)
+          setIsSending(false)
         }, 3000)
       }
     } catch (error) {
-      showToastBottom('error', String(error) as string)
-      setIsSend(false)
+      console.log('error', String(error) as string)
+      setIsSending(false)
     }
   }
 
@@ -311,7 +314,7 @@ export function ExamEdit() {
     // Get
     await CourseViewModel.getAll().then(response => {
       if (response.error) {
-        showToastBottom('error', response.msg as string)
+        console.log('error', response.msg as string)
       } else {
         const arrayData = response.data as CourseInterface[]
 
@@ -333,7 +336,7 @@ export function ExamEdit() {
     await ModuleViewModel.getAllByCourse(course_id)
       .then(response => {
         if (response.error) {
-          showToastBottom('error', response.msg as string)
+          console.log('error', response.msg as string)
         } else {
           const arrayData = response.data as ModuleInterface[]
 
@@ -346,7 +349,7 @@ export function ExamEdit() {
         }
       })
       .catch(err => {
-        showToastBottom('error', err as string)
+        console.log('error', err as string)
       })
   }
 
@@ -360,10 +363,9 @@ export function ExamEdit() {
       if (response.error) {
         // alert(response.msg as string)
         // showToastBottom('error', response.msg as string)
+        console.log('error', response.msg as string)
       } else {
         const data = response.data as ExamInterface
-
-        // console.log(data)
 
         setBaseInfo(data)
       }
@@ -381,10 +383,9 @@ export function ExamEdit() {
       if (response.error) {
         // alert(response.msg as string)
         // showToastBottom('error', response.msg as string)
+        console.log('error', response.msg as string)
       } else {
         const data = response.data as ExamQuestionInterface[]
-
-        console.log(data)
 
         setExamQuestions(data)
       }
@@ -602,13 +603,13 @@ export function ExamEdit() {
                     type="submit"
                     className="w-[16rem] h-[2.6rem] min-w-[12rem] px-3 rounded-lg bg-primary-200 text-white hover:bg-primary-500 active:bg-primary-700 flex flex-row items-center justify-center gap-2 transition-all duration-300 "
                   >
-                    {isSend && (
+                    {isSending && (
                       <>
                         <BeatLoader color="white" size={10} />
                       </>
                     )}
 
-                    {!isSend && <span>Salvar alterações</span>}
+                    {!isSending && <span>Salvar alterações</span>}
                   </button>
                 </div>
               </form>

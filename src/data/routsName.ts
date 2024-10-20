@@ -18,8 +18,8 @@ export const routsNameMain = {
     editStr: `/exam/edit`,
     // Result
     result: `/exam/result`,
-    check: `/exam/result/student/check/:studentId/:examId`,
-    checkString: `/exam/result/student/check`
+    check: `/exam/result/check/:resultId`,
+    checkString: `/exam/result/check`
   },
 
   // Tarefas

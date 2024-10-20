@@ -10,6 +10,7 @@ interface TextAreaLabelSimpleProps {
   label: string
   onChange: (value: string) => void
   placeholder?: string
+  defaultValue?: string
   required?: boolean
 }
 
@@ -22,6 +23,7 @@ export function TextAreaLabelSimple({
   label,
   placeholder,
   onChange,
+  defaultValue,
   required
 }: TextAreaLabelSimpleProps) {
   const handleInputChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
@@ -46,6 +48,7 @@ export function TextAreaLabelSimple({
           onChange={handleInputChange}
           placeholder={placeholder}
           required={required}
+          defaultValue={defaultValue}
           className={`w-full p-2.5 dark:bg-gray-700/60 bg-gray-100/10  dark:border-gray-500/60 border-gray-300/60 dark:placeholder-gray-400 dark:text-gray-300 placeholder-gray-500 text-gray-500 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block`}
         />
 

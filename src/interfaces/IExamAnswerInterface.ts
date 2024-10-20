@@ -11,3 +11,10 @@ export interface ExamAnswerInterface {
   date_create?: string
   date_update?: string
 }
+export interface ExamAnswerMarkInterface {
+  exam_id: string
+  student_id: string
+  question_id: string
+  mark: string // Cotação dada pela resposta
+  is_correct: boolean // Se a resposta foi correta ou não (dependendo da correção)
+}

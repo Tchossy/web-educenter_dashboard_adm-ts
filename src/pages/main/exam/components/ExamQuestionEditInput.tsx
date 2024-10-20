@@ -74,7 +74,7 @@ export function ExamQuestionEditInput({
   handleUpdateListing,
   handleDeleteRow
 }: rowQuestionType<ExamQuestionInterface>) {
-  const [isSend, setIsSend] = useState<boolean>(false)
+  const [isSending, setIsSending] = useState<boolean>(false)
   const [questionType, setQuestionType] = useState<string>(
     baseInfo?.question_type || 'short_answer'
   )
@@ -110,7 +110,7 @@ export function ExamQuestionEditInput({
 
   // Function Submit Form
   async function handleSubmitForm(dataForm: any) {
-    setIsSend(true)
+    setIsSending(true)
 
     try {
       const dataToSave: ExamQuestionInterface = {
@@ -126,17 +126,17 @@ export function ExamQuestionEditInput({
 
       if (resultSubmit.error) {
         showToastBottom('error', resultSubmit.msg)
-        setIsSend(false)
+        setIsSending(false)
       } else {
         showToastBottom('success', resultSubmit.msg)
 
         setTimeout(() => {
-          setIsSend(false)
+          setIsSending(false)
         }, 3000)
       }
     } catch (error) {
       showToastBottom('error', String(error) as string)
-      setIsSend(false)
+      setIsSending(false)
     }
 
     console.log('Dados do Formulário:', dataForm)
@@ -154,7 +154,7 @@ export function ExamQuestionEditInput({
 
       <CustomInput
         type="text"
-        isDisabled={isSend}
+        isDisabled={isSending}
         htmlFor="question_text"
         label={`Questão ${index}`}
         placeholder="Digite a questão"
@@ -164,7 +164,7 @@ export function ExamQuestionEditInput({
       <div className="w-full grid gap-6 md:grid-cols-2">
         <SelectCustomZod
           name="question_type"
-          isDisabled={isSend}
+          isDisabled={isSending}
           label="Tipo de questão"
           control={control}
           options={questionTypeOptions}
@@ -174,7 +174,7 @@ export function ExamQuestionEditInput({
         <div className="w-full h-full flex flex-1 flex-row gap-5 items-end">
           <CustomInput
             type="number"
-            isDisabled={isSend}
+            isDisabled={isSending}
             htmlFor="value"
             label={`Valor da questão`}
             placeholder="Valor"
@@ -183,7 +183,7 @@ export function ExamQuestionEditInput({
 
           <button
             type="button"
-            disabled={isSend}
+            disabled={isSending}
             onClick={() => handleDeleteRow(baseInfo?.id as string)}
             className="w-full max-w-[8rem] h-[2.6rem] px-1 rounded-lg bg-[#FF0000] text-white hover:bg-red-600 active:bg-red-900 flex flex-row items-center justify-center gap-2 transition-all duration-300 "
           >
@@ -193,16 +193,16 @@ export function ExamQuestionEditInput({
 
           <button
             type="submit"
-            disabled={isSend}
+            disabled={isSending}
             className="w-full max-w-[8rem] h-[2.6rem] px-1 rounded-lg bg-blue-500 text-white hover:bg-blue-600 active:bg-blue-900 flex flex-row items-center justify-center gap-2 transition-all duration-300 "
           >
-            {isSend && (
+            {isSending && (
               <>
                 <BeatLoader color="white" size={10} />
               </>
             )}
 
-            {!isSend && (
+            {!isSending && (
               <>
                 <MdUpdate />
                 Atualizar

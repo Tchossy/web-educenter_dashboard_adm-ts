@@ -39,6 +39,7 @@ import { ModuleInterface } from '../../../interfaces/IModuleInterface'
 import { OptionType } from '../../../types/option'
 import { ExamQuestionInterface } from '../../../interfaces/IExamQuestionInterface'
 import ExamQuestionViewModel from '../../../services/ViewModel/ExamQuestionViewModel'
+import { useNavigate } from 'react-router-dom'
 
 const formSchema = z.object({
   name: z
@@ -146,6 +147,12 @@ const formSchema = z.object({
 type formType = z.infer<typeof formSchema>
 
 export function ExamCreate() {
+  const navigate = useNavigate()
+
+  const handleNavigation = (page: string) => {
+    navigate(page) // Navega para a página "/about"
+  }
+
   // State
   const [isCreated, setIsCreated] = useState<boolean>(false)
   const [isExameId, setIsExameId] = useState<string | null>(null)
@@ -273,8 +280,10 @@ export function ExamCreate() {
           showToastBottom('error', resultSubmit.msg)
           setIsSend(false)
         } else {
-          showToastBottom('success', resultSubmit.msg)
+          // showToastBottom('success', resultSubmit.msg)
+          console.log('Success', resultSubmit.msg)
 
+          setIsSend(false)
           setIsCreated(true)
           setIsExameId(resultSubmit.data?.id as string)
 
@@ -301,6 +310,7 @@ export function ExamCreate() {
               } else {
                 setTimeout(() => {
                   reset()
+                  handleNavigation(routsNameMain.exam.index)
                   setSelectedImageFile('')
                   setUrlImageUploaded(null)
                   setImageSelect('')
@@ -311,13 +321,13 @@ export function ExamCreate() {
               // console.log(questionToSave)
             })
           } else {
-            alert('Por favor crie as perguntas para o exame')
+            showToastBottom('error', 'Por favor crie as perguntas para o exame')
           }
         }
       } else {
-        alert('Esse exame já foi criado')
+        // alert('Esse exame já foi criado')
 
-        if (dataForm.questions) {
+        if (dataForm.questions.length !== 0) {
           dataForm.questions.forEach(async (question: any) => {
             // Converte o array em uma string JSON
             const optionsString = JSON.stringify(question.options)
@@ -338,22 +348,26 @@ export function ExamCreate() {
               showToastBottom('error', resultQuestionSubmit.msg)
               setIsSend(false)
             } else {
-              setTimeout(() => {
-                reset()
-                setSelectedImageFile('')
-                setUrlImageUploaded(null)
-                setImageSelect('')
-                setIsCreated(false)
-                setIsExameId(null)
-                setIsSend(false)
-              }, 3000)
+              showToastBottom('success', resultQuestionSubmit.msg)
             }
-
             // console.log(questionToSave)
           })
+
+          setTimeout(() => {
+            reset()
+            handleNavigation(routsNameMain.exam.index)
+            setSelectedImageFile('')
+            setUrlImageUploaded(null)
+            setImageSelect('')
+            setIsCreated(false)
+            setIsExameId(null)
+            setIsSend(false)
+          }, 3000)
         } else {
-          alert('Por favor crie as perguntas para o exame')
+          showToastBottom('error', 'Por favor crie as perguntas para o exame')
+          // alert('Por favor crie as perguntas para o exame')
         }
+        setIsSend(false)
       }
     } catch (error) {
       showToastBottom('error', String(error) as string)
@@ -588,10 +602,17 @@ export function ExamCreate() {
 
             <div className="w-full">
               <button
+                disabled={isSend}
                 type="submit"
                 className="w-[16rem] h-[2.6rem] min-w-[12rem] px-3 rounded-lg bg-primary-200 text-white hover:bg-primary-500 active:bg-primary-700 flex flex-row items-center justify-center gap-2 transition-all duration-300 "
               >
-                Criar Exame
+                {isSend && (
+                  <>
+                    <BeatLoader color="white" size={10} />
+                  </>
+                )}
+
+                {!isSend && <span>Criar Exame</span>}
               </button>
             </div>
           </form>

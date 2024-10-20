@@ -240,6 +240,9 @@ export function Task() {
                   Tipo de tarefa
                 </th>
                 <th scope="col" className="px-3 py-3 min-w-[6rem]">
+                  Status
+                </th>
+                <th scope="col" className="px-3 py-3 min-w-[6rem]">
                   Data de entrega
                 </th>
                 <th scope="col" className="px-3 py-3 min-w-[6rem]">

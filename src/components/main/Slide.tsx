@@ -135,6 +135,7 @@ export const Slide = () => {
         {item.accordion && <AccordionSidBar items={item} />}
         {!item.accordion && (
           <Link
+            key={index}
             to={item.to}
             className="w-full py-2 px-3 flex items-center justify-between gap-2 hover:bg-gray-100 dark:hover:bg-gray-500 rounded-md transition-all duration-200 hover:pl-3  "
           >

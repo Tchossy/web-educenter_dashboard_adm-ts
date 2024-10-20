@@ -1,16 +1,15 @@
-import { MaterialInterface } from '../../interfaces/IMaterialInterface'
+import { ExamResultInterface } from '../../interfaces/IExamResultInterface'
 import { ApiResponse } from '../../interfaces/IApiResponse'
 import ApiDAO from '../../modules/Api/Dao/ApiDAO'
 
-class MaterialViewModel {
+class ExamResultViewModel {
   public async create(
     data: any
-  ): Promise<ApiResponse<MaterialInterface | null>> {
+  ): Promise<ApiResponse<ExamResultInterface | null>> {
     try {
-      const response = await ApiDAO.post<ApiResponse<MaterialInterface | null>>(
-        '/material/create',
-        data
-      )
+      const response = await ApiDAO.post<
+        ApiResponse<ExamResultInterface | null>
+      >('/exam/result/create', data)
 
       if (response.error) {
         return {
@@ -22,7 +21,7 @@ class MaterialViewModel {
 
       return {
         error: false,
-        msg: response.msg || 'Professor created successfully',
+        msg: response.msg || 'Result created successfully',
         data: response.data
       }
     } catch (error: any) {
@@ -33,11 +32,11 @@ class MaterialViewModel {
       }
     }
   }
-  public async getAll(): Promise<ApiResponse<MaterialInterface[] | null>> {
+  public async getAll(): Promise<ApiResponse<ExamResultInterface[] | null>> {
     try {
       const response = await ApiDAO.get<
-        ApiResponse<MaterialInterface[] | null>
-      >(`/material/get/all`)
+        ApiResponse<ExamResultInterface[] | null>
+      >(`/exam/result/get/all`)
 
       if (response.error) {
         return {
@@ -49,7 +48,7 @@ class MaterialViewModel {
 
       return {
         error: false,
-        msg: response.msg || 'Professor retrieved successfully',
+        msg: response.msg || 'Result retrieved successfully',
         data: response.data
       }
     } catch (error: any) {
@@ -61,13 +60,13 @@ class MaterialViewModel {
     }
   }
 
-  public async getAllByTermData(
-    term: string
-  ): Promise<ApiResponse<[MaterialInterface] | null>> {
+  public async getAllByStudent(
+    id: string
+  ): Promise<ApiResponse<ExamResultInterface[] | null>> {
     try {
       const response = await ApiDAO.get<
-        ApiResponse<[MaterialInterface] | null>
-      >(`/material/search/all/${term}`)
+        ApiResponse<ExamResultInterface[] | null>
+      >(`/exam/result/get/all/by/student/${id}`)
 
       if (response.error) {
         return {
@@ -91,13 +90,13 @@ class MaterialViewModel {
     }
   }
 
-  public async getAllByModule(
-    id: string
-  ): Promise<ApiResponse<[MaterialInterface] | null>> {
+  public async getAllByTermData(
+    term: string
+  ): Promise<ApiResponse<[ExamResultInterface] | null>> {
     try {
       const response = await ApiDAO.get<
-        ApiResponse<[MaterialInterface] | null>
-      >(`/exam/get/all/by/module/${id}`)
+        ApiResponse<[ExamResultInterface] | null>
+      >(`/exam/result/search/all/${term}`)
 
       if (response.error) {
         return {
@@ -123,11 +122,11 @@ class MaterialViewModel {
 
   public async getOne(
     id: string
-  ): Promise<ApiResponse<MaterialInterface | null>> {
+  ): Promise<ApiResponse<ExamResultInterface | null>> {
     try {
-      const response = await ApiDAO.get<ApiResponse<MaterialInterface | null>>(
-        `/material/get/one/${id}`
-      )
+      const response = await ApiDAO.get<
+        ApiResponse<ExamResultInterface | null>
+      >(`/exam/result/get/one/${id}`)
 
       if (response.error) {
         return {
@@ -139,7 +138,37 @@ class MaterialViewModel {
 
       return {
         error: false,
-        msg: response.msg || 'Professor retrieved successfully',
+        msg: response.msg || 'Result retrieved successfully',
+        data: response.data
+      }
+    } catch (error: any) {
+      return {
+        error: true,
+        msg: error.message,
+        data: null
+      }
+    }
+  }
+  public async getByExamAndStudent(
+    examId: string,
+    studentId: string
+  ): Promise<ApiResponse<ExamResultInterface | null>> {
+    try {
+      const response = await ApiDAO.get<
+        ApiResponse<ExamResultInterface | null>
+      >(`/exam/result/get/one/by/exam/student/${examId}/${studentId}`)
+
+      if (response.error) {
+        return {
+          error: true,
+          msg: response.msg || 'Unknown error occurred',
+          data: null
+        }
+      }
+
+      return {
+        error: false,
+        msg: response.msg || 'Result retrieved successfully',
         data: response.data
       }
     } catch (error: any) {
@@ -154,12 +183,11 @@ class MaterialViewModel {
   public async update(
     id: string,
     data: any
-  ): Promise<ApiResponse<MaterialInterface | null>> {
+  ): Promise<ApiResponse<ExamResultInterface | null>> {
     try {
-      const response = await ApiDAO.put<ApiResponse<MaterialInterface | null>>(
-        `/material/update/${id}`,
-        data
-      )
+      const response = await ApiDAO.put<
+        ApiResponse<ExamResultInterface | null>
+      >(`/exam/result/update/${id}`, data)
 
       if (response.error) {
         return {
@@ -171,7 +199,7 @@ class MaterialViewModel {
 
       return {
         error: false,
-        msg: response.msg || 'Professor updated successfully',
+        msg: response.msg || 'Result updated successfully',
         data: response.data
       }
     } catch (error: any) {
@@ -186,7 +214,7 @@ class MaterialViewModel {
   public async delete(id: string): Promise<ApiResponse<null>> {
     try {
       const response = await ApiDAO.delete<ApiResponse<null>>(
-        `/material/delete/${id}`
+        `/exam/result/delete/${id}`
       )
 
       if (response.error) {
@@ -199,7 +227,7 @@ class MaterialViewModel {
 
       return {
         error: false,
-        msg: response.msg || 'Professor deleted successfully',
+        msg: response.msg || 'Result deleted successfully',
         data: null
       }
     } catch (error: any) {
@@ -212,4 +240,4 @@ class MaterialViewModel {
   }
 }
 
-export default new MaterialViewModel()
+export default new ExamResultViewModel()

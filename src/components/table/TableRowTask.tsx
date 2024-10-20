@@ -22,6 +22,7 @@ import ModuleViewModel from '../../services/ViewModel/ModuleViewModel'
 import { showToast } from '../../utils/toasts'
 // Data
 import { routsNameMain } from '../../data/routsName'
+import { BadgeSimple } from '../badge/BadgeSimple'
 
 interface TableRowProps {
   rowItem: TaskInterface
@@ -44,6 +45,12 @@ export const TableRowTask: React.FC<TableRowProps> = ({
       : rowItem.status === 'closed'
       ? 'Fechado'
       : 'Pendente'
+  const colorStatus =
+    rowItem.status == 'open'
+      ? 'green'
+      : rowItem.status == 'pending'
+      ? 'orange'
+      : 'red'
 
   const [rowsCourseData, setRowsCourseData] = useState<CourseInterface | null>(
     null
@@ -123,6 +130,9 @@ export const TableRowTask: React.FC<TableRowProps> = ({
       </td>
       <td className="px-3 py-3 min-w-[6rem] max-w-[20rem]">
         {rowItem.task_type}
+      </td>
+      <td className="px-3 py-3 min-w-[6rem] max-w-[20rem]">
+        <BadgeSimple color={colorStatus} label={labelStatus} />
       </td>
       <td className="px-3 py-3 min-w-[6rem] max-w-[20rem]">
         {rowItem.due_date}

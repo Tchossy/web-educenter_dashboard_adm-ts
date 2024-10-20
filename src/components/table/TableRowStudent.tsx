@@ -25,7 +25,7 @@ const TableRowStudent: React.FC<TableRowProps> = ({
   openModalEditRow,
   handleDeleteRow
 }) => {
-  const labelStatus = rowItem.status == 'active' ? 'Ativo' : 'Desativo'
+  const labelStatus = rowItem.status == 'active' ? 'Ativo' : 'Inativo'
   const labelGender = rowItem.gender == 'male' ? 'Masculino' : 'Feminino'
 
   const [rowsCourseData, setRowsCourseData] = useState<CourseInterface | null>(
