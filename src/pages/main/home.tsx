@@ -5,20 +5,41 @@ import { GraduationCap, LibraryBig, BookMarked } from 'lucide-react'
 import { LiaChalkboardTeacherSolid } from 'react-icons/lia'
 // Component
 import { TableRowExamLittle } from '../../components/table/TableRowExamLittle'
-import { TableRowResultLittle } from '../../components/table/TableRowResultLittle'
+import { TableRowTaskLittle } from '../../components/table/TableRowTaskLittle'
 import { Breadcrumbs } from '../../components/Breadcrumbs'
 // Data
 import { routsNameMain } from '../../data/routsName'
 // UseStores
 import { useAdminStore } from '../../stores/adminStore'
 import { getGreeting, getGreetingMsg } from '../../utils/getGreeting'
+import { ExamInterface } from '../../interfaces/IExamInterface'
+import { TaskInterface } from '../../interfaces/ITaskInterface'
+import { StudentInterface } from '../../interfaces/IStudentInterface'
+import { ProfessorInterface } from '../../interfaces/IProfessorInterface'
+import ExamViewModel from '../../services/ViewModel/ExamViewModel'
+import TaskViewModel from '../../services/ViewModel/TaskViewModel'
+import ProfessorViewModel from '../../services/ViewModel/ProfessorViewModel'
+import StudentViewModel from '../../services/ViewModel/StudentViewModel'
 
 export function Home() {
   const { currentAdminData } = useAdminStore()
 
-  const [rowsDataUser, setRowsDataUser] = useState<any[] | null>(null)
-  const [rowsDataExams, setRowsDataExams] = useState<any[] | null>(null)
-  const [rowsDataResults, setRowsDataResults] = useState<any[] | null>(null)
+  // Professor data
+  const [rowsDataProfessors, setRowsDataProfessors] = useState<
+    ProfessorInterface[] | null
+  >(null)
+  // Student data
+  const [rowsDataStudents, setRowsDataStudents] = useState<
+    StudentInterface[] | null
+  >(null)
+  // Exam data
+  const [rowsDataExams, setRowsDataExams] = useState<ExamInterface[] | null>(
+    null
+  )
+  // Task data
+  const [rowsDataTasks, setRowsDataTasks] = useState<TaskInterface[] | null>(
+    null
+  )
 
   const itemsBreadcrumbs = [
     { label: 'Painel', to: routsNameMain.home },
@@ -26,57 +47,110 @@ export function Home() {
   ]
 
   const rowsTableExams = rowsDataExams?.map((item, index) => {
-    return (
-      <TableRowExamLittle
-        key={index}
-        rowItem={item}
-        openModalSeeRow={() => null} // Substitua pelo seu código real
-        openModalEditRow={() => null} // Substitua pelo seu código real
-        handleDeleteRow={() => null} // Substitua pelo seu código real
-      />
-    )
+    return <TableRowExamLittle key={index} rowItem={item} />
   })
-  const rowsTableResults = rowsDataResults?.map((item, index) => {
-    return (
-      <TableRowResultLittle
-        key={index}
-        rowItem={item}
-        openModalSeeRow={() => null} // Substitua pelo seu código real
-        openModalEditRow={() => null} // Substitua pelo seu código real
-        handleDeleteRow={() => null} // Substitua pelo seu código real
-      />
-    )
+  const rowsTableResults = rowsDataTasks?.map((item, index) => {
+    return <TableRowTaskLittle key={index} rowItem={item} />
   })
 
-  function fetchDataUser(limit: string) {
+  async function fetchDataProfessor() {
     // Clear
-    setRowsDataUser(null)
+    setRowsDataProfessors(null)
 
     // Get
+    await ProfessorViewModel.getAll().then(response => {
+      if (response.error) {
+        console.error('error: ', response.msg as string)
+      } else {
+        const arrayData = response.data as ProfessorInterface[]
+
+        // Definir a lista completa de exames
+        setRowsDataProfessors(arrayData as ProfessorInterface[])
+      }
+    })
   }
-  function fetchDataExam(limit: string) {
+  async function fetchDataStudent() {
+    // Clear
+    setRowsDataStudents(null)
+
+    // Get
+    await StudentViewModel.getAll().then(response => {
+      if (response.error) {
+        console.error('error: ', response.msg as string)
+      } else {
+        const arrayData = response.data as StudentInterface[]
+
+        // Definir a lista completa de exames
+        setRowsDataStudents(arrayData as StudentInterface[])
+      }
+    })
+  }
+
+  // Fetch Exam
+  async function fetchDataExam() {
     // Clear
     setRowsDataExams(null)
 
     // Get
+    await ExamViewModel.getAll().then(response => {
+      if (response.error) {
+        console.error('error: ', response.msg as string)
+      } else {
+        const arrayData = response.data as unknown as ExamInterface[]
+
+        // Ordenar exames pela data (mais recente primeiro)
+        const sortedExams = arrayData.sort(
+          (a, b) =>
+            new Date(b.date_exam).getTime() - new Date(a.date_exam).getTime()
+        )
+
+        // Filtrar todos os exames com status 'checked'
+        const examsChecked = sortedExams.filter(
+          exam => exam.status === 'scheduled'
+        )
+
+        // Limitar a quantidade a 3 exames
+        const limitedExams = examsChecked.slice(0, 3)
+
+        setRowsDataExams(limitedExams as ExamInterface[])
+      }
+    })
   }
-  function fetchDataResult(limit: string) {
+
+  // Fetch Task
+  async function fetchDataTask() {
     // Clear
-    setRowsDataResults(null)
+    setRowsDataTasks(null)
 
     // Get
+    await TaskViewModel.getAll().then(response => {
+      if (response.error) {
+        console.error('error: ', response.msg as string)
+      } else {
+        const arrayData = response.data as unknown as TaskInterface[]
+
+        const examsScheduled = arrayData.filter(exam => exam.status === 'open')
+
+        setRowsDataTasks(examsScheduled as TaskInterface[])
+      }
+    })
   }
 
   useEffect(() => {
-    fetchDataUser('6')
-    fetchDataExam('6')
-    fetchDataResult('6')
+    // Professor
+    fetchDataProfessor()
+    // Student
+    fetchDataStudent()
+    // Exam
+    fetchDataExam()
+    // Task
+    fetchDataTask()
   }, [])
 
   return (
     <div className="w-full h-full flex flex-col justify-start items-start gap-6 overflow-x-hidden ">
       <Breadcrumbs items={itemsBreadcrumbs} />
-      {/* Pacientes */}
+      {/* Header */}
       <div className="relative w-full flex flex-row justify-between items-start rounded-md bg-light dark:bg-dark shadow-3xl  ">
         <div className="w-full my-14 mx-6 flex flex-col justify-start items-start gap-2">
           <span className="text-2xl font-semibold ">
@@ -112,15 +186,8 @@ export function Home() {
           </span>
           <span className="font-normal text-base ">Total de Professores</span>
           <span className="text-3xl font-semibold ">
-            {' 126 '}
-            {rowsDataUser?.length}{' '}
+            {rowsDataProfessors?.length}{' '}
           </span>
-          {/* <span className="text-xs flex flex-row items-center justify-center gap-[6px] ">
-            <span className="text-green-500 font-medium flex flex-row items-center justify-center gap-1 ">
-              <LiaChalkboardTeacherSolid size={16} /> +2,5%
-            </span>
-            do que na semana passada
-          </span> */}
         </div>
 
         {/* Estudantes */}
@@ -130,15 +197,8 @@ export function Home() {
           </span>
           <span className="font-normal text-base ">Total de Estudantes</span>
           <span className="text-3xl font-semibold ">
-            {' 46 '}
-            {rowsDataExams?.length}{' '}
+            {rowsDataStudents?.length}{' '}
           </span>
-          {/* <span className="text-xs flex flex-row items-center justify-center gap-[6px] ">
-            <span className="text-red-400 font-medium flex flex-row items-center justify-center gap-1 ">
-              <TrendingDown size={16} /> -1,4%
-            </span>
-            do que na semana passada
-          </span> */}
         </div>
 
         {/* Cursos */}
@@ -146,42 +206,32 @@ export function Home() {
           <span className="text-red-400 ">
             <LibraryBig size={36} />
           </span>
-          <span className="font-normal text-base ">Total de Cursos</span>
-          <span className="text-3xl font-semibold ">
-            {' 17 '}
-            {rowsDataResults?.length}
+          <span className="font-normal text-base ">
+            Total de Exames Marcados
           </span>
-          {/* <span className="text-xs flex flex-row items-center justify-center gap-[6px] ">
-            <span className="text-green-500 font-medium flex flex-row items-center justify-center gap-1 ">
-              <TrendingUp size={16} /> +2,8%
-            </span>
-            do que na semana passada
-          </span> */}
+          <span className="text-3xl font-semibold ">
+            {rowsDataExams?.length}
+          </span>
         </div>
 
-        {/* Exames Ativos */}
+        {/* Tarefa Ativos */}
         <div className="w-full p-6 flex flex-col justify-start items-start gap-3 rounded-md bg-light dark:bg-dark shadow-3xl ">
           <span className="text-yellow-400 ">
             <BookMarked size={36} />
           </span>
-          <span className="font-normal text-base ">Total de Exames Ativos</span>
-          <span className="text-3xl font-semibold ">
-            {' 17 '}
-            {rowsDataResults?.length}
+          <span className="font-normal text-base ">
+            Total de Tarefa abertas
           </span>
-          {/* <span className="text-xs flex flex-row items-center justify-center gap-[6px] ">
-            <span className="text-green-500 font-medium flex flex-row items-center justify-center gap-1 ">
-              <TrendingUp size={16} /> +2,8%
-            </span>
-            do que na semana passada
-          </span> */}
+          <span className="text-3xl font-semibold ">
+            {rowsDataTasks?.length}
+          </span>
         </div>
       </div>
 
       <div className="w-full grid grid-cols-2 gap-6">
         <div className="w-full p-6 flex flex-col justify-start items-start gap-6 rounded-md bg-light dark:bg-dark">
           <h1 className="text-xl font-bold text-dark dark:text-light ">
-            Listagem de resultados recentes
+            Listagem de tarefas recentes
           </h1>
 
           <div className="relative w-full overflow-x-auto">
@@ -189,20 +239,16 @@ export function Home() {
               <thead className="text-sm font-thin bg-gray-300/40 dark:bg-gray-500/40 ">
                 <tr className="border-b dark:border-gray-700">
                   <th scope="col" className="px-3 py-3 min-w-[6rem] ">
-                    Id
-                  </th>
-
-                  <th scope="col" className="px-3 py-3 min-w-[6rem] ">
-                    Estudante
+                    Tarefa
                   </th>
                   <th scope="col" className="px-3 py-3 min-w-[6rem] ">
-                    Exame
+                    Tipo de tarefa
                   </th>
                   <th scope="col" className="px-3 py-3 min-w-[6rem] ">
-                    Pontuação
+                    Valor
                   </th>
                   <th scope="col" className="px-3 py-3 min-w-[6rem] ">
-                    Data
+                    Data de entrega
                   </th>
                 </tr>
               </thead>
@@ -214,7 +260,7 @@ export function Home() {
 
         <div className="w-full p-6 flex flex-col justify-start items-start gap-6 rounded-md bg-light dark:bg-dark">
           <h1 className="text-xl font-bold text-dark dark:text-light ">
-            Listagem exames recentes
+            Proximos exames
           </h1>
 
           <div className="relative w-full overflow-x-auto">
@@ -222,13 +268,16 @@ export function Home() {
               <thead className="text-sm font-thin bg-gray-300/40 dark:bg-gray-500/40 ">
                 <tr className="border-b dark:border-gray-700">
                   <th scope="col" className="px-3 py-3 min-w-[6rem] ">
-                    Nome do Exame
+                    Exame
                   </th>
                   <th scope="col" className="px-3 py-3 min-w-[6rem] ">
-                    Curso Vinculado
+                    início
                   </th>
                   <th scope="col" className="px-3 py-3 min-w-[6rem] ">
-                    Especialidade Vinculada
+                    Fim
+                  </th>
+                  <th scope="col" className="px-3 py-3 min-w-[6rem] ">
+                    Nota (%)
                   </th>
                   <th scope="col" className="px-3 py-3 min-w-[6rem] ">
                     Data

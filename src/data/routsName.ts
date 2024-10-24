@@ -21,6 +21,12 @@ export const routsNameMain = {
     check: `/exam/result/check/:resultId`,
     checkString: `/exam/result/check`
   },
+  // Performance
+  performance: {
+    index: `/performance`,
+    weekly: `/performance/weekly/:studentId`,
+    weeklyStr: `/performance/weekly`
+  },
 
   // Tarefas
   task: {
@@ -31,8 +37,8 @@ export const routsNameMain = {
     student: `/task/result/student/:studentId`,
     // Result
     result: `/task/result`,
-    check: `/task/result/student/check/:studentId/:taskId`,
-    checkString: `/task/result/student/check`
+    check: `/task/result/check/:taskId/:submissionId`,
+    checkString: `/task/result/check`
   },
 
   material: `/material`

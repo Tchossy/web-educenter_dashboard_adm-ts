@@ -1,21 +1,20 @@
 import { useEffect, useState } from 'react'
 
 // LIBS
-import { Link } from 'react-router-dom'
 import swal from 'sweetalert'
 import { IoSearchSharp } from 'react-icons/io5'
 
 // Icon
-import { Plus } from 'lucide-react'
+import { FileDown, Plus } from 'lucide-react'
 
 // Data
 import { routsNameMain } from '../../../data/routsName'
 
 // Services
-import TaskSubmissionViewModel from '../../../services/ViewModel/TaskSubmissionViewModel'
+import StudentViewModel from '../../../services/ViewModel/StudentViewModel'
 
 // Table
-import { TableRowTaskSubmission } from '../../../components/table/TableRowTaskSubmission'
+import TableRow from '../../../components/table/TableRowStudent'
 
 // Components
 import { SelectCustom } from '../../../components/selects/SelectCustom'
@@ -23,17 +22,28 @@ import { Breadcrumbs } from '../../../components/Breadcrumbs'
 import { InputWithButton } from '../../../components/input/InputWithButton'
 import ExportToExcel from '../../../components/ExportToExcel'
 
-// Interface
-import { TaskSubmissionInterface } from '../../../interfaces/ITaskSubmissionInterface'
-import { showToast } from '../../../utils/toasts'
+// Modals
+import { ModalCreateStudent } from '../../../components/modal/student/ModalCreate'
+import { ModalEditStudent } from '../../../components/modal/student/ModalEdit'
+import { ModalSeeStudent } from '../../../components/modal/student/ModalSee'
 
-export function TaskSubmission() {
+// Interface
+import { StudentInterface } from '../../../interfaces/IStudentInterface'
+import { showToast } from '../../../utils/toasts'
+import { TableRowPerformance } from '../../../components/table/TableRowPerformance.'
+
+export function Performance() {
   // State
-  const [rowsData, setRowsData] = useState<TaskSubmissionInterface[] | null>(
-    null
-  )
+  const [rowsData, setRowsData] = useState<StudentInterface[] | null>(null)
   const [dataToExport, setDataToExport] = useState<any[]>([])
 
+  // Modal
+  const [modalEditRowIsOpen, setModalEditRowIsOpen] = useState<boolean>(false)
+  const [modalSeeRowIsOpen, setModalSeeRowIsOpen] = useState<boolean>(false)
+  const [modalCreateRowIsOpen, setModalCreateRowIsOpen] =
+    useState<boolean>(false)
+
+  const [rowSelect, setRowSelect] = useState<any | null>(null)
   const [selectedValue, setSelectedValue] = useState('8')
 
   // Search
@@ -43,14 +53,13 @@ export function TaskSubmission() {
   const [totalDocs, setTotalDocs] = useState<number>(0)
 
   // Consts
-  const namePageUppercase = 'Tarefas enviadas'
-  const namePageLowercase = 'tarefas enviadas'
-  const namePageSingular = 'tarefa'
+  const namePageUppercase = 'Desempenho'
+  const namePageLowercase = 'estudantes'
 
   // List Array
   const itemsBreadcrumbs = [
     { label: 'Inicio', to: routsNameMain.home },
-    { label: namePageUppercase, to: routsNameMain.task.index },
+    { label: namePageUppercase, to: routsNameMain.student },
     { label: 'Listagem' }
   ]
 
@@ -64,13 +73,7 @@ export function TaskSubmission() {
     { value: 'Todos', label: 'Todos' }
   ]
   const rowsTable = rowsData?.map((item, index) => {
-    return (
-      <TableRowTaskSubmission
-        key={index}
-        rowItem={item}
-        handleDeleteRow={handleDeleteRow} // Substitua pelo seu código real
-      />
-    )
+    return <TableRowPerformance key={index} rowItem={item} />
   })
 
   // Function
@@ -79,26 +82,24 @@ export function TaskSubmission() {
     setRowsData(null)
 
     // Get
-    await TaskSubmissionViewModel.getAll().then(response => {
+    await StudentViewModel.getAll().then(response => {
       if (response.error) {
         showToast('error', response.msg as string)
       } else {
-        const arrayData = response.data as TaskSubmissionInterface[]
+        const arrayData = response.data as unknown as StudentInterface[]
         setTotalDocs(arrayData.length)
-        console.log(response)
+        console.log(arrayData)
 
         const listData = arrayData.slice(0, Number(limit))
 
-        setRowsData(listData as TaskSubmissionInterface[])
+        setRowsData(listData as StudentInterface[])
       }
     })
   }
 
   // Get more data
   function fetchMoreData() {
-    const result = parseInt(docsPerPage) + parseInt(docsPerPage)
-    const str = result.toString()
-    fetchData(str)
+    fetchData(docsPerPage + docsPerPage)
   }
 
   // Search data
@@ -106,49 +107,19 @@ export function TaskSubmission() {
     if (termForSearch == '') {
       fetchData(docsPerPage)
     } else {
-      TaskSubmissionViewModel.getAllByTermData(termForSearch).then(response => {
-        setRowsData(response?.data as TaskSubmissionInterface[])
+      StudentViewModel.getAllByTermData(termForSearch).then(response => {
+        setRowsData(response.data as StudentInterface[])
       })
     }
   }
 
-  // Delete row
-  function handleDeleteRow(id: string) {
-    swal({
-      title: 'Tem certeza?',
-      text: 'Uma vez excluído, você não poderá recuperar!',
-      buttons: ['Cancelar', 'Confirmar'],
-      icon: 'warning',
-      dangerMode: true
-    }).then(async willDelete => {
-      if (willDelete) {
-        await TaskSubmissionViewModel.delete(id).then(response => {
-          console.log(response)
-
-          if (response.error) {
-            swal(`Erro ao deletar registo: ${response.msg}`, {
-              icon: 'error'
-            })
-            console.error('', response.msg)
-          } else {
-            swal('Deletado com sucesso', {
-              icon: 'success'
-            })
-
-            fetchData(docsPerPage)
-          }
-        })
-      } else {
-        swal('O registo está seguro!', {
-          icon: 'error'
-        })
-      }
-    })
+  // Update Listing
+  const handleUpdateListing = () => {
+    fetchData(docsPerPage)
   }
 
   // Change rows per page
   const handleSelectChange = (value: string) => {
-    setSelectedValue(value)
     setDocsPerPage(value)
     fetchData(value)
   }
@@ -160,14 +131,11 @@ export function TaskSubmission() {
   useEffect(() => {
     const newData = rowsData?.map(doc => ({
       Id: `${doc.id}`,
-      Tarefa: doc.task_id,
-      Estudante: doc.student_id,
-      Tarefa_Enviada: doc.submission_url,
-      Texto: doc.submission_text,
-      Resultado: doc.result,
-      Feedback: doc.feedback,
-      Data_de_envio: doc.submission_date,
-      Nota: doc.grade,
+      Nome: doc.first_name,
+      Sobrenome: doc.last_name,
+      Telemovel: doc.phone,
+      Email: doc.email,
+      Genero: doc.gender,
       Status: doc.status,
       Data_de_criacao: doc.date_create,
       Ultima_atualização: doc.date_update
@@ -189,9 +157,9 @@ export function TaskSubmission() {
           <div className="flex flex-row items-center justify-between gap-4">
             <ExportToExcel
               data={dataToExport}
-              filename="exam_result_data"
-              sheetName="Exame"
-              titlePage="Lista de resultados do exame"
+              filename="material_data"
+              sheetName="Material"
+              titlePage="Lista de materiais"
               imageSrc="http://localhost:5173/logo.png"
               orientation="landscape"
               scale={0.8}
@@ -216,31 +184,36 @@ export function TaskSubmission() {
 
         <div className="relative w-full overflow-x-auto">
           <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-            <thead className="text-sm font-thin bg-gray-300/40 dark:bg-gray-500/40">
+            <thead className="text-sm font-thin bg-gray-300/40 dark:bg-gray-500/40 ">
               <tr className="border-b dark:border-gray-700">
-                <th scope="col" className="px-3 py-3 w-[0rem]">
+                <th scope="col" className="px-3 py-3 w-[0rem] ">
                   Id
                 </th>
-                <th scope="col" className="px-3 py-3 min-w-[6rem]">
-                  Tarefa
+                <th scope="col" className="px-3 py-3 min-w-[6rem] ">
+                  Nome
+                </th>
+
+                <th scope="col" className="px-3 py-3 min-w-[6rem] ">
+                  Genero
+                </th>
+                <th scope="col" className="px-3 py-3 min-w-[6rem] ">
+                  Número
                 </th>
                 <th scope="col" className="px-3 py-3 min-w-[6rem]">
-                  Estudante
+                  Curso
                 </th>
                 <th scope="col" className="px-3 py-3 min-w-[6rem]">
-                  Nota
+                  Módulo
                 </th>
-                <th scope="col" className="px-3 py-3 min-w-[6rem]">
-                  Status
+                <th scope="col" className="px-3 py-3 min-w-[6rem] ">
+                  Registo
                 </th>
-                <th scope="col" className="px-3 py-3 min-w-[6rem]">
-                  Data de envio
-                </th>
-                <th scope="col" className="px-3 py-3 min-w-[6rem]">
+                <th scope="col" className="px-3 py-3 min-w-[6rem] ">
                   Ação
                 </th>
               </tr>
             </thead>
+
             <tbody>{rowsTable}</tbody>
           </table>
 
@@ -258,7 +231,7 @@ export function TaskSubmission() {
               <strong className="text-dark dark:text-light font-semibold">
                 {totalDocs}
               </strong>
-              {namePageUppercase}
+              {namePageLowercase}
             </p>
 
             <div className="flex flex-row justify-center items-center gap-4 ">
@@ -282,6 +255,30 @@ export function TaskSubmission() {
           </div>
         </div>
       </div>
+
+      {modalCreateRowIsOpen && (
+        <ModalCreateStudent
+          handleUpdateListing={handleUpdateListing}
+          modalCreateRowIsOpen={modalCreateRowIsOpen}
+          setModalCreateRowIsOpen={setModalCreateRowIsOpen}
+        />
+      )}
+      {modalEditRowIsOpen && (
+        <ModalEditStudent
+          baseInfo={rowSelect}
+          handleUpdateListing={handleUpdateListing}
+          modalEditRowIsOpen={modalEditRowIsOpen}
+          setModalEditRowIsOpen={setModalEditRowIsOpen}
+        />
+      )}
+      {modalSeeRowIsOpen && (
+        <ModalSeeStudent
+          baseInfo={rowSelect}
+          handleUpdateListing={handleUpdateListing}
+          modalSeeRowIsOpen={modalSeeRowIsOpen}
+          setModalSeeRowIsOpen={setModalSeeRowIsOpen}
+        />
+      )}
     </div>
   )
 }

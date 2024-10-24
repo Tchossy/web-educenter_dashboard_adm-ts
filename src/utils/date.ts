@@ -17,3 +17,14 @@
 // }
 
 export const toDay = new Date().toISOString().split('T')[0]
+
+// Função para converter o horário para minutos totais
+export function convertTimeToMinutes(time: string): number {
+  const [hours, minutes] = time.split(':').map(Number)
+  return hours * 60 + minutes
+}
+
+const now = new Date()
+const hours = String(now.getHours()).padStart(2, '0')
+const minutes = String(now.getMinutes()).padStart(2, '0')
+export const fullTime = `${hours}:${minutes}`

@@ -58,6 +58,35 @@ class TaskViewModel {
       }
     }
   }
+  public async getAllByModule(
+    id: string
+  ): Promise<ApiResponse<[TaskInterface] | null>> {
+    try {
+      const response = await ApiDAO.get<ApiResponse<[TaskInterface] | null>>(
+        `/task/get/all/by/module/${id}`
+      )
+
+      if (response.error) {
+        return {
+          error: true,
+          msg: response.msg || 'Unknown error occurred',
+          data: null
+        }
+      }
+
+      return {
+        error: false,
+        msg: response.msg,
+        data: response.data
+      }
+    } catch (error: any) {
+      return {
+        error: true,
+        msg: error.message,
+        data: null
+      }
+    }
+  }
 
   public async getAllByTermData(
     term: string

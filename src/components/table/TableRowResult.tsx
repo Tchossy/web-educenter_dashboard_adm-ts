@@ -27,8 +27,24 @@ export const TableRowResult: React.FC<TableRowProps> = ({
     null
   )
 
-  const labelStatus = rowItem.status == 'checked' ? 'Corrigida' : 'Pendente'
-  const colorStatus = rowItem.status == 'checked' ? 'blue' : 'orange'
+  const labelStatus =
+    rowItem.status == 'checked'
+      ? 'Corrigida'
+      : rowItem.status == 'expired'
+      ? 'Não finalizada'
+      : rowItem.status == 'sent'
+      ? 'Enviada'
+      : 'Pendente'
+
+  const colorStatus =
+    rowItem.status == 'checked'
+      ? 'green'
+      : rowItem.status == 'expired'
+      ? 'red'
+      : rowItem.status == 'sent'
+      ? 'blue'
+      : 'orange'
+
   const resultStatus =
     rowItem.result == 'approved'
       ? 'Aprovado'

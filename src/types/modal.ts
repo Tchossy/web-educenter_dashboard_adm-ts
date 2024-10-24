@@ -1,4 +1,5 @@
-export type modalCreateType = {
+export type modalCreateType<T> = {
+  baseInfo?: T
   handleUpdateListing: () => void
   modalCreateRowIsOpen: boolean
   setModalCreateRowIsOpen: (e: boolean) => void

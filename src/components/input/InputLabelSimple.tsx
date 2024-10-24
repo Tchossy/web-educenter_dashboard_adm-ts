@@ -10,6 +10,7 @@ interface InputLabelSimpleProps {
   label: string
   onChange: (value: string) => void // Função para controlar a mudança de valor
   placeholder?: string
+  defaultValue?: string
   required?: boolean
 }
 
@@ -23,7 +24,9 @@ export function InputLabelSimple({
   label,
   placeholder,
   onChange,
-  required
+  defaultValue,
+  required,
+  ...inputProps
 }: InputLabelSimpleProps) {
   // Estado interno para controlar o valor do input
   const [inputValue, setInputValue] = useState<string>(value)
@@ -53,8 +56,10 @@ export function InputLabelSimple({
       <input
         type={type}
         id={htmlFor}
+        {...inputProps}
         value={inputValue} // Controlado pelo estado interno
         disabled={isDisabled}
+        defaultValue={defaultValue}
         onChange={handleInputChange} // Função de mudança de input
         className={`w-full p-2.5 border dark:bg-gray-700/60 bg-gray-100/10 dark:border-gray-500/60 border-gray-300/60 dark:text-gray-300 text-gray-500 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block`}
         placeholder={placeholder || ''}

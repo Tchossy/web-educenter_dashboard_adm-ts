@@ -33,6 +33,8 @@ import { TaskCreate } from '../pages/main/task/taskCreate'
 import { TaskCheck } from '../pages/main/task/taskCheck'
 import { TaskEdit } from '../pages/main/task/taskEdit'
 import { ExamEdit } from '../pages/main/exam/examEdit'
+import { Performance } from '../pages/main/performance/performance'
+import { PerformanceWeekly } from '../pages/main/performance/performanceWeekly'
 
 // const Home = React.lazy(() => import('../pages/main/home'))
 export function Router() {
@@ -214,6 +216,28 @@ export function Router() {
               <React.Suspense fallback={<Loading />}>
                 <Private>
                   <TaskCheck />
+                </Private>
+              </React.Suspense>
+            }
+          />
+          {/* Performance */}
+          <Route
+            path={routsNameMain.performance.index}
+            element={
+              <React.Suspense fallback={<Loading />}>
+                <Private>
+                  <Performance />
+                </Private>
+              </React.Suspense>
+            }
+          />
+          {/* Performance Weekly */}
+          <Route
+            path={routsNameMain.performance.weekly}
+            element={
+              <React.Suspense fallback={<Loading />}>
+                <Private>
+                  <PerformanceWeekly />
                 </Private>
               </React.Suspense>
             }

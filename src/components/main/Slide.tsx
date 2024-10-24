@@ -8,7 +8,8 @@ import {
   LibraryBig,
   CircleCheckBig,
   BookOpenCheck,
-  BookMarked
+  BookMarked,
+  CalendarDays
 } from 'lucide-react'
 import { PiExamBold } from 'react-icons/pi'
 import { LiaChalkboardTeacherSolid } from 'react-icons/lia'
@@ -115,6 +116,14 @@ export const Slide = () => {
       label: 'Submissões',
       icon: <CircleCheckBig className="text-xs" size={18} />,
       to: routsNameMain.task.result,
+
+      notification: 0,
+      accordion: false
+    },
+    {
+      label: 'Desempenho',
+      icon: <CalendarDays className="text-xs" size={18} />,
+      to: routsNameMain.performance.index,
 
       notification: 0,
       accordion: false

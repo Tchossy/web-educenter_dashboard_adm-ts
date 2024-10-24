@@ -1,15 +1,15 @@
-import { ExamInterface } from '../../interfaces/IExamInterface'
+import { WeeklyAverageInterface } from '../../interfaces/IWeeklyAverageInterface'
 import { ApiResponse } from '../../interfaces/IApiResponse'
 import ApiDAO from '../../modules/Api/Dao/ApiDAO'
-import { ExamQuestionInterface } from '../../interfaces/IExamQuestionInterface'
 
-class ExamViewModel {
-  public async create(data: any): Promise<ApiResponse<ExamInterface | null>> {
+class WeeklyAverageViewModel {
+  public async create(
+    data: any
+  ): Promise<ApiResponse<WeeklyAverageInterface | null>> {
     try {
-      const response = await ApiDAO.post<ApiResponse<ExamInterface | null>>(
-        '/exam/create',
-        data
-      )
+      const response = await ApiDAO.post<
+        ApiResponse<WeeklyAverageInterface | null>
+      >('/weekly/average/create', data)
 
       if (response.error) {
         return {
@@ -21,7 +21,7 @@ class ExamViewModel {
 
       return {
         error: false,
-        msg: response.msg || 'Professor created successfully',
+        msg: response.msg || 'Student created successfully',
         data: response.data
       }
     } catch (error: any) {
@@ -32,40 +32,12 @@ class ExamViewModel {
       }
     }
   }
-  public async getAll(): Promise<ApiResponse<ExamInterface[] | null>> {
-    try {
-      const response = await ApiDAO.get<ApiResponse<ExamInterface[] | null>>(
-        `/exam/get/all`
-      )
 
-      if (response.error) {
-        return {
-          error: true,
-          msg: response.msg || 'Unknown error occurred',
-          data: null
-        }
-      }
-
-      return {
-        error: false,
-        msg: response.msg || 'Professor retrieved successfully',
-        data: response.data
-      }
-    } catch (error: any) {
-      return {
-        error: true,
-        msg: error.message,
-        data: null
-      }
-    }
-  }
-  public async getAllByExam(
-    id: string
-  ): Promise<ApiResponse<[ExamQuestionInterface] | null>> {
+  public async getAll(): Promise<ApiResponse<WeeklyAverageInterface[] | null>> {
     try {
       const response = await ApiDAO.get<
-        ApiResponse<[ExamQuestionInterface] | null>
-      >(`/exam/question/get/all/by/exam/${id}`)
+        ApiResponse<WeeklyAverageInterface[] | null>
+      >(`/weekly/average/get/all`)
 
       if (response.error) {
         return {
@@ -77,7 +49,7 @@ class ExamViewModel {
 
       return {
         error: false,
-        msg: response.msg,
+        msg: response.msg || 'Student retrieved successfully',
         data: response.data
       }
     } catch (error: any) {
@@ -91,11 +63,11 @@ class ExamViewModel {
 
   public async getAllByTermData(
     term: string
-  ): Promise<ApiResponse<[ExamInterface] | null>> {
+  ): Promise<ApiResponse<[WeeklyAverageInterface] | null>> {
     try {
-      const response = await ApiDAO.get<ApiResponse<[ExamInterface] | null>>(
-        `/exam/search/all/${term}`
-      )
+      const response = await ApiDAO.get<
+        ApiResponse<[WeeklyAverageInterface] | null>
+      >(`/weekly/average/search/all/${term}`)
 
       if (response.error) {
         return {
@@ -121,11 +93,11 @@ class ExamViewModel {
 
   public async getAllByStudent(
     id: string
-  ): Promise<ApiResponse<[ExamInterface] | null>> {
+  ): Promise<ApiResponse<[WeeklyAverageInterface] | null>> {
     try {
-      const response = await ApiDAO.get<ApiResponse<[ExamInterface] | null>>(
-        `/exam/get/all/by/student/${id}`
-      )
+      const response = await ApiDAO.get<
+        ApiResponse<[WeeklyAverageInterface] | null>
+      >(`/weekly/average/get/all/by/student/${id}`)
 
       if (response.error) {
         return {
@@ -149,11 +121,13 @@ class ExamViewModel {
     }
   }
 
-  public async getOne(id: string): Promise<ApiResponse<ExamInterface | null>> {
+  public async getOne(
+    id: string
+  ): Promise<ApiResponse<WeeklyAverageInterface | null>> {
     try {
-      const response = await ApiDAO.get<ApiResponse<ExamInterface | null>>(
-        `/exam/get/one/${id}`
-      )
+      const response = await ApiDAO.get<
+        ApiResponse<WeeklyAverageInterface | null>
+      >(`/weekly/average/get/one/${id}`)
 
       if (response.error) {
         return {
@@ -165,7 +139,7 @@ class ExamViewModel {
 
       return {
         error: false,
-        msg: response.msg || 'Professor retrieved successfully',
+        msg: response.msg || 'Student retrieved successfully',
         data: response.data
       }
     } catch (error: any) {
@@ -180,12 +154,14 @@ class ExamViewModel {
   public async update(
     id: string,
     data: any
-  ): Promise<ApiResponse<ExamInterface | null>> {
+  ): Promise<ApiResponse<WeeklyAverageInterface | null>> {
     try {
-      const response = await ApiDAO.put<ApiResponse<ExamInterface | null>>(
-        `/exam/update/${id}`,
-        data
-      )
+      const response = await ApiDAO.put<
+        ApiResponse<WeeklyAverageInterface | null>
+      >(`/weekly/average/update/${id}`, data)
+
+      console.log('==============')
+      console.log(response)
 
       if (response.error) {
         return {
@@ -197,7 +173,7 @@ class ExamViewModel {
 
       return {
         error: false,
-        msg: response.msg || 'Professor updated successfully',
+        msg: response.msg || 'Student updated successfully',
         data: response.data
       }
     } catch (error: any) {
@@ -212,7 +188,7 @@ class ExamViewModel {
   public async delete(id: string): Promise<ApiResponse<null>> {
     try {
       const response = await ApiDAO.delete<ApiResponse<null>>(
-        `/exam/delete/${id}`
+        `/weekly/average/delete/${id}`
       )
 
       if (response.error) {
@@ -225,7 +201,7 @@ class ExamViewModel {
 
       return {
         error: false,
-        msg: response.msg || 'Professor deleted successfully',
+        msg: response.msg || 'Student deleted successfully',
         data: null
       }
     } catch (error: any) {
@@ -238,4 +214,4 @@ class ExamViewModel {
   }
 }
 
-export default new ExamViewModel()
+export default new WeeklyAverageViewModel()

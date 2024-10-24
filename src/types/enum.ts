@@ -7,7 +7,7 @@ export type TaskResultType = 'approved' | 'failed' | 'pending'
 
 export type ExamStatusType = 'scheduled' | 'completed'
 export type ExamResultType = 'approved' | 'failed' | 'pending'
-export type ExamResultStatusType = 'checked' | 'pending'
+export type ExamResultStatusType = 'checked' | 'pending' | 'sent' | 'expired'
 export type ExamQuestionType =
   | 'multiple_choice'
   | 'short_answer'

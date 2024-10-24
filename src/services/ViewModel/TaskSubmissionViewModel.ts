@@ -1,15 +1,15 @@
-import { ExamInterface } from '../../interfaces/IExamInterface'
 import { ApiResponse } from '../../interfaces/IApiResponse'
 import ApiDAO from '../../modules/Api/Dao/ApiDAO'
-import { ExamQuestionInterface } from '../../interfaces/IExamQuestionInterface'
+import { TaskSubmissionInterface } from '../../interfaces/ITaskSubmissionInterface'
 
-class ExamViewModel {
-  public async create(data: any): Promise<ApiResponse<ExamInterface | null>> {
+class TaskSubmissionViewModel {
+  public async create(
+    data: any
+  ): Promise<ApiResponse<TaskSubmissionInterface | null>> {
     try {
-      const response = await ApiDAO.post<ApiResponse<ExamInterface | null>>(
-        '/exam/create',
-        data
-      )
+      const response = await ApiDAO.post<
+        ApiResponse<TaskSubmissionInterface | null>
+      >('/task/submission/create', data)
 
       if (response.error) {
         return {
@@ -21,7 +21,7 @@ class ExamViewModel {
 
       return {
         error: false,
-        msg: response.msg || 'Professor created successfully',
+        msg: response.msg || 'Result created successfully',
         data: response.data
       }
     } catch (error: any) {
@@ -32,40 +32,43 @@ class ExamViewModel {
       }
     }
   }
-  public async getAll(): Promise<ApiResponse<ExamInterface[] | null>> {
-    try {
-      const response = await ApiDAO.get<ApiResponse<ExamInterface[] | null>>(
-        `/exam/get/all`
-      )
-
-      if (response.error) {
-        return {
-          error: true,
-          msg: response.msg || 'Unknown error occurred',
-          data: null
-        }
-      }
-
-      return {
-        error: false,
-        msg: response.msg || 'Professor retrieved successfully',
-        data: response.data
-      }
-    } catch (error: any) {
-      return {
-        error: true,
-        msg: error.message,
-        data: null
-      }
-    }
-  }
-  public async getAllByExam(
-    id: string
-  ): Promise<ApiResponse<[ExamQuestionInterface] | null>> {
+  public async getAll(): Promise<
+    ApiResponse<TaskSubmissionInterface[] | null>
+  > {
     try {
       const response = await ApiDAO.get<
-        ApiResponse<[ExamQuestionInterface] | null>
-      >(`/exam/question/get/all/by/exam/${id}`)
+        ApiResponse<TaskSubmissionInterface[] | null>
+      >(`/task/submission/get/all`)
+
+      if (response.error) {
+        return {
+          error: true,
+          msg: response.msg || 'Unknown error occurred',
+          data: null
+        }
+      }
+
+      return {
+        error: false,
+        msg: response.msg || 'Result retrieved successfully',
+        data: response.data
+      }
+    } catch (error: any) {
+      return {
+        error: true,
+        msg: error.message,
+        data: null
+      }
+    }
+  }
+
+  public async getAllByStudent(
+    id: string
+  ): Promise<ApiResponse<TaskSubmissionInterface[] | null>> {
+    try {
+      const response = await ApiDAO.get<
+        ApiResponse<TaskSubmissionInterface[] | null>
+      >(`/task/submission/get/all/by/student/${id}`)
 
       if (response.error) {
         return {
@@ -91,11 +94,11 @@ class ExamViewModel {
 
   public async getAllByTermData(
     term: string
-  ): Promise<ApiResponse<[ExamInterface] | null>> {
+  ): Promise<ApiResponse<[TaskSubmissionInterface] | null>> {
     try {
-      const response = await ApiDAO.get<ApiResponse<[ExamInterface] | null>>(
-        `/exam/search/all/${term}`
-      )
+      const response = await ApiDAO.get<
+        ApiResponse<[TaskSubmissionInterface] | null>
+      >(`/task/submission/search/all/${term}`)
 
       if (response.error) {
         return {
@@ -119,13 +122,13 @@ class ExamViewModel {
     }
   }
 
-  public async getAllByStudent(
+  public async getOne(
     id: string
-  ): Promise<ApiResponse<[ExamInterface] | null>> {
+  ): Promise<ApiResponse<TaskSubmissionInterface | null>> {
     try {
-      const response = await ApiDAO.get<ApiResponse<[ExamInterface] | null>>(
-        `/exam/get/all/by/student/${id}`
-      )
+      const response = await ApiDAO.get<
+        ApiResponse<TaskSubmissionInterface | null>
+      >(`/task/submission/get/one/${id}`)
 
       if (response.error) {
         return {
@@ -137,7 +140,7 @@ class ExamViewModel {
 
       return {
         error: false,
-        msg: response.msg,
+        msg: response.msg || 'Result retrieved successfully',
         data: response.data
       }
     } catch (error: any) {
@@ -148,12 +151,14 @@ class ExamViewModel {
       }
     }
   }
-
-  public async getOne(id: string): Promise<ApiResponse<ExamInterface | null>> {
+  public async getByExamAndStudent(
+    examId: string,
+    studentId: string
+  ): Promise<ApiResponse<TaskSubmissionInterface | null>> {
     try {
-      const response = await ApiDAO.get<ApiResponse<ExamInterface | null>>(
-        `/exam/get/one/${id}`
-      )
+      const response = await ApiDAO.get<
+        ApiResponse<TaskSubmissionInterface | null>
+      >(`/task/submission/get/one/by/exam/student/${examId}/${studentId}`)
 
       if (response.error) {
         return {
@@ -165,7 +170,7 @@ class ExamViewModel {
 
       return {
         error: false,
-        msg: response.msg || 'Professor retrieved successfully',
+        msg: response.msg || 'Result retrieved successfully',
         data: response.data
       }
     } catch (error: any) {
@@ -180,12 +185,11 @@ class ExamViewModel {
   public async update(
     id: string,
     data: any
-  ): Promise<ApiResponse<ExamInterface | null>> {
+  ): Promise<ApiResponse<TaskSubmissionInterface | null>> {
     try {
-      const response = await ApiDAO.put<ApiResponse<ExamInterface | null>>(
-        `/exam/update/${id}`,
-        data
-      )
+      const response = await ApiDAO.put<
+        ApiResponse<TaskSubmissionInterface | null>
+      >(`/task/submission/update/${id}`, data)
 
       if (response.error) {
         return {
@@ -197,7 +201,7 @@ class ExamViewModel {
 
       return {
         error: false,
-        msg: response.msg || 'Professor updated successfully',
+        msg: response.msg || 'Result updated successfully',
         data: response.data
       }
     } catch (error: any) {
@@ -212,7 +216,7 @@ class ExamViewModel {
   public async delete(id: string): Promise<ApiResponse<null>> {
     try {
       const response = await ApiDAO.delete<ApiResponse<null>>(
-        `/exam/delete/${id}`
+        `/task/submission/delete/${id}`
       )
 
       if (response.error) {
@@ -225,7 +229,7 @@ class ExamViewModel {
 
       return {
         error: false,
-        msg: response.msg || 'Professor deleted successfully',
+        msg: response.msg || 'Result deleted successfully',
         data: null
       }
     } catch (error: any) {
@@ -238,4 +242,4 @@ class ExamViewModel {
   }
 }
 
-export default new ExamViewModel()
+export default new TaskSubmissionViewModel()

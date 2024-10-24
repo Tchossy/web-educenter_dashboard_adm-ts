@@ -1,98 +1,78 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { FiEdit } from 'react-icons/fi'
-import { AiFillDelete } from 'react-icons/ai'
-import { BadgeAction } from '../badge/BadgeAction'
-import { BadgeSimple } from '../badge/BadgeSimple'
-import { Eye } from 'lucide-react'
-import { AdminInterface } from '../../interfaces/IAdmin'
+import { ExamInterface } from '../../interfaces/IExamInterface'
+import { ModuleInterface } from '../../interfaces/IModuleInterface'
+import ModuleViewModel from '../../services/ViewModel/ModuleViewModel'
+import { convertTimeToMinutes, fullTime } from '../../utils/date'
 
 interface TableRowProps {
-  rowItem: AdminInterface
-  handleDeleteRow: (action: string) => void
-  openModalSeeRow: (action: any) => void
-  openModalEditRow: (action: any) => void
+  rowItem: ExamInterface
 }
 
-export const TableRowExamLittle: React.FC<TableRowProps> = ({
-  rowItem,
-  openModalSeeRow,
-  openModalEditRow,
-  handleDeleteRow
-}) => {
-  const labelStatus = rowItem.status == 'active' ? 'Ativo' : 'Desativo'
-  const labelGender = rowItem.gender == 'mane' ? 'Masculino' : 'Feminino'
+export const TableRowExamLittle: React.FC<TableRowProps> = ({ rowItem }) => {
+  const currentDate = new Date()
+  const examDate = new Date(rowItem.date_exam)
+
+  // Convertendo ambos os horários para minutos totais
+  const fullTimeInMinutes = convertTimeToMinutes(fullTime)
+  const endTimeInMinutes = convertTimeToMinutes(
+    rowItem?.end_time ? rowItem?.end_time : ''
+  )
+
+  const examIsAlreadyPassedTime = fullTimeInMinutes > endTimeInMinutes
+  const isExamToday = examDate.toDateString() === currentDate.toDateString()
+  const isExamInTheFuture = examDate > currentDate
+  const isExamInThePast = examDate < currentDate
+
+  const [rowsModuleData, setRowsModuleData] = useState<ModuleInterface | null>(
+    null
+  )
+
+  // Function Module
+  async function fetchModuleData() {
+    // Clear
+    setRowsModuleData(null)
+
+    // Get
+    await ModuleViewModel.getOne(rowItem?.module_id as string).then(
+      response => {
+        if (response.error) {
+          alert(response.msg as string)
+          console.log('error', response.msg)
+        } else {
+          const arrayData = response.data as ModuleInterface
+          const listData = arrayData
+
+          setRowsModuleData(listData)
+        }
+      }
+    )
+  }
+
+  useEffect(() => {
+    fetchModuleData()
+  }, [])
 
   return (
-    <motion.tr
-      // initial={{ opacity: 0, y: -50 }}
-      // animate={{ opacity: 1, y: 0 }}
-      // exit={{ opacity: 0, y: -50 }}
-      className="border-b dark:border-gray-700 hover:bg-gray-100/40 dark:hover:bg-gray-700/40 transition-all duration-300 cursor-pointer"
-    >
-      <td className="px-3 py-3 min-w-[6rem]">
-        <p className="flex flex-row justify-start items-center">
-          #{rowItem.id}
-        </p>
-      </td>
-      <td className="px-3 py-3 min-w-[6rem]">
+    <motion.tr className="border-b dark:border-gray-700 hover:bg-gray-100/40 dark:hover:bg-gray-700/40 transition-all duration-300 cursor-pointer">
+      <td className="px-3 py-3 min-w-[6rem] max-w-[20rem]">
         <div className="flex flex-row justify-start items-center gap-2">
-          <div className="relative w-9 h-9 overflow-hidden">
-            <img
-              className="w-full h-full object-cover rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 transition-transform duration-300"
-              src={rowItem.photo}
-              alt="Rafael"
-            />
-          </div>
           <div className="flex flex-col justify-center items-start">
-            <span className="text-dark dark:text-light font-semibold text-sm">
-              {rowItem.first_name + ' ' + rowItem.last_name}
+            <span className="text-dark dark:text-light text-sm">
+              {rowItem.name}
             </span>
-            <span className="text-xs">{rowItem.email}</span>
           </div>
         </div>
       </td>
-      <td className="px-3 py-3 min-w-[6rem]">
-        <p className="flex flex-row justify-start items-center">
-          {labelGender}
-        </p>
+      <td className="px-3 py-3 min-w-[6rem] max-w-[20rem]">
+        {rowItem.start_time}
       </td>
-      <td className="px-3 py-3 min-w-[6rem]">
-        <p className="flex flex-row justify-start items-center">
-          {rowItem.phone}
-        </p>
+      <td className="px-3 py-3 min-w-[6rem] max-w-[20rem]">
+        {rowItem.end_time}
       </td>
-      <td className="px-3 py-3 min-w-[6rem]">
-        {rowItem.status == 'active' && (
-          <BadgeSimple color="blue" label={labelStatus} />
-        )}
-        {rowItem.status == 'inactive' && (
-          <BadgeSimple color="red" label={labelStatus} />
-        )}
-      </td>
-      <td className="px-3 py-3 min-w-[6rem]">
-        <p className="flex flex-row justify-start items-center">
-          {rowItem.date_create}
-        </p>
-      </td>
-      <td className="px-3 py-3 min-w-[6rem]">
-        <div className="flex flex-row justify-start items-center gap-4">
-          <BadgeAction
-            color="green"
-            icon={FiEdit}
-            onclickBtn={() => openModalEditRow(rowItem)}
-          />
-          <BadgeAction
-            color="blue"
-            icon={Eye}
-            onclickBtn={() => openModalSeeRow(rowItem)}
-          />
-          <BadgeAction
-            color="red"
-            icon={AiFillDelete}
-            onclickBtn={() => handleDeleteRow(rowItem.id as string)}
-          />
-        </div>
+      <td className="px-3 py-3 min-w-[6rem] max-w-[20rem]">{rowItem.mark}</td>
+      <td className="px-3 py-3 min-w-[6rem] max-w-[20rem]">
+        {rowItem.date_exam}
       </td>
     </motion.tr>
   )

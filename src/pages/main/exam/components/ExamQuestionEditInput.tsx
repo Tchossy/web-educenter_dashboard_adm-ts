@@ -148,7 +148,7 @@ export function ExamQuestionEditInput({
       onSubmit={handleSubmit(handleSubmitForm, errors => {
         console.log(errors)
       })}
-      className="w-full flex flex-col gap-4 p-4 border rounded-md"
+      className="w-full flex flex-col gap-4 p-4 border border-gray-300 dark:border-gray-500 rounded-md"
     >
       <ToastContainer />
 
