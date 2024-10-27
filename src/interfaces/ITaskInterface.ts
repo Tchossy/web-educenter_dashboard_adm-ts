@@ -12,7 +12,7 @@ export interface TaskInterface {
 
   task_type: TaskType // "online", "upload"
   due_date: string // Data limite
-  status: TaskStatusType // ex: "active", "inactive"
+  status: TaskStatusType // ex: 'open' | 'closed' | 'pending'
 
   file_url?: string // URL para o PDF ou instruções (caso seja uma tarefa de upload)
 

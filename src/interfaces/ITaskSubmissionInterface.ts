@@ -7,7 +7,7 @@ export interface TaskSubmissionInterface {
 
   submission_text?: string // Caso seja uma resposta online
   submission_url?: string // URL para o PDF ou documento submetido
-  result: TaskResultType // ex: "approved", "failed", 'pending'
+  result: TaskResultType // ex: "approved", "failed", "sufficient" 'pending'
 
   feedback?: string // Comentários do professor
 

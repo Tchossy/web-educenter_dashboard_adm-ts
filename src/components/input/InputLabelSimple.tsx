@@ -1,14 +1,14 @@
 import { ChangeEvent, useState, useEffect } from 'react'
 
 interface InputLabelSimpleProps {
-  error?: boolean // Erros do react-hook-form
+  error?: boolean
   error_message?: string
-  isDisabled?: boolean // Erros do react-hook-form
+  isDisabled?: boolean
   type: string
-  value?: string // Valor inicial opcional
+  value?: string
   htmlFor: string
   label: string
-  onChange: (value: string) => void // Função para controlar a mudança de valor
+  onChange: (value: string) => void
   placeholder?: string
   defaultValue?: string
   required?: boolean
@@ -19,7 +19,7 @@ export function InputLabelSimple({
   error = false,
   error_message,
   type,
-  value = '', // Valor inicial opcional com valor padrão
+  value,
   htmlFor,
   label,
   placeholder,
@@ -28,21 +28,23 @@ export function InputLabelSimple({
   required,
   ...inputProps
 }: InputLabelSimpleProps) {
-  // Estado interno para controlar o valor do input
-  const [inputValue, setInputValue] = useState<string>(value)
+  // Usa defaultValue ou value para inicializar o inputValue
+  const [inputValue, setInputValue] = useState<string>(defaultValue || '')
 
-  // Atualiza o valor inicial quando ele for passado
+  // Atualiza o valor interno quando o prop 'value' muda
   useEffect(() => {
     if (value !== undefined) {
       setInputValue(value)
+    } else if (defaultValue !== undefined) {
+      setInputValue(defaultValue)
     }
-  }, [value])
+  }, [value, defaultValue])
 
-  // Função para lidar com as mudanças no input
+  // Função para lidar com mudanças no input
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value
-    setInputValue(newValue) // Atualiza o estado interno
-    onChange(newValue) // Chama o callback passado via props
+    setInputValue(newValue)
+    onChange(newValue)
   }
 
   return (
@@ -57,11 +59,10 @@ export function InputLabelSimple({
         type={type}
         id={htmlFor}
         {...inputProps}
-        value={inputValue} // Controlado pelo estado interno
+        value={inputValue} // Agora controlado apenas pelo inputValue
         disabled={isDisabled}
-        defaultValue={defaultValue}
-        onChange={handleInputChange} // Função de mudança de input
-        className={`w-full p-2.5 border dark:bg-gray-700/60 bg-gray-100/10 dark:border-gray-500/60 border-gray-300/60 dark:text-gray-300 text-gray-500 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block`}
+        onChange={handleInputChange}
+        className="w-full p-2.5 border dark:bg-gray-700/60 bg-gray-100/10 dark:border-gray-500/60 border-gray-300/60 dark:text-gray-300 text-gray-500 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block"
         placeholder={placeholder || ''}
         required={required}
       />

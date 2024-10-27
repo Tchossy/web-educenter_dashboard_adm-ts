@@ -6,7 +6,7 @@ export const genderOptions: OptionType[] = [
 ]
 export const statusOptions: OptionType[] = [
   { value: 'inactive', label: 'Inativo' },
-  { value: 'active', label: 'Activo' }
+  { value: 'active', label: 'Ativo' }
 ]
 export const statusExamOptions: OptionType[] = [
   { value: 'scheduled', label: 'Agendado' },

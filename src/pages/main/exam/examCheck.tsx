@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 // lib
 import { useNavigate, useParams } from 'react-router-dom'
 import { BeatLoader } from 'react-spinners'
+import { Button, Modal } from 'flowbite-react'
 
 // Form
 import { useForm } from 'react-hook-form'
@@ -10,7 +11,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 
 // Icons
-import { SendHorizontal } from 'lucide-react'
+import { CircleAlert, SendHorizontal } from 'lucide-react'
 
 // Data
 import { routsNameMain } from '../../../data/routsName'
@@ -107,7 +108,8 @@ export function ExamCheck() {
 
   // Loading
   const [isLoading, setIsLoading] = useState<boolean>(false)
-  const [isSending, setIsSending] = useState<boolean>(false)
+
+  const [openModal, setOpenModal] = useState(true)
 
   // Data
   const [rowExamResultData, setRowExamResultData] =
@@ -346,6 +348,88 @@ export function ExamCheck() {
 
   return (
     <div className="w-full h-full flex flex-col justify-start items-start gap-6">
+      {openModal && (
+        <Modal
+          show={openModal}
+          onClose={() => setOpenModal(false)}
+          className="pt-40 pr-52 pb-52 pl-52 bg-dark bg-opacity-40"
+        >
+          <Modal.Header className="p-4 ">Informação importante</Modal.Header>
+          <Modal.Body>
+            <div className="space-y-6">
+              <ul className="flex flex-col gap-2 text-base font-normal dark:text-light text-gray-600">
+                <li className="flex flex-row gap-1">
+                  <div>
+                    <CircleAlert size={18} className="text-primary-200" />
+                  </div>
+                  <div className="w-full">
+                    <span className="font-bold">
+                      Cotação Automática das Perguntas de Múltipla Escolha:
+                    </span>
+                    As perguntas do tipo "múltipla escolha" têm sua cotação
+                    atribuída automaticamente e não podem ser ajustadas
+                    manualmente.
+                  </div>
+                </li>
+
+                <li className="flex flex-row gap-1">
+                  <div>
+                    <CircleAlert size={18} className="text-primary-200" />
+                  </div>
+                  <div className="w-full">
+                    <span className="font-bold">
+                      Limite de Cotação por Pergunta:
+                    </span>
+                    Ao atribuir uma cotação para cada resposta, certifique-se de
+                    que o valor não ultrapasse a cotação máxima definida para
+                    aquela pergunta.
+                  </div>
+                </li>
+
+                <li className="flex flex-row gap-1">
+                  <div>
+                    <CircleAlert size={18} className="text-primary-200" />
+                  </div>
+                  <div className="w-full">
+                    <span className="font-bold">
+                      Salvamento da Correção Individual:
+                    </span>
+                    Após definir a cotação de cada resposta, clique no botão{' '}
+                    <span className="font-bold">"Salvar"</span> para garantir
+                    que as correções individuais sejam salvas.
+                  </div>
+                </li>
+
+                <li className="w-full flex flex-row gap-1">
+                  <div>
+                    <CircleAlert size={18} className="text-primary-200" />
+                  </div>
+                  <div className="w-full">
+                    <span className="font-bold">
+                      Finalização e Atualização da Correção:
+                    </span>
+                    Após revisar e atribuir as cotações para todas as respostas,
+                    clique em{' '}
+                    <span className="font-bold">"Salvar como corrigido"</span>{' '}
+                    para notificar o aluno que o exame foi corrigido ou
+                    selecione{' '}
+                    <span className="font-bold">
+                      "Atualizar pontuação total"
+                    </span>{' '}
+                    para calcular e atribuir a pontuação final ao exame.
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button color="gray" onClick={() => setOpenModal(false)}>
+              Entendi
+            </Button>
+          </Modal.Footer>
+        </Modal>
+      )}
+
       {!isLoading && rowExamResultData && (
         <>
           <div className="w-full flex flex-row items-center justify-between gap-2 ">
@@ -469,13 +553,50 @@ export function ExamCheck() {
                         <BeatLoader color="white" size={10} />
                       </>
                     )}
-                    {!isSend && <>Salvar como corrigido</>}
+                    {!isSend && (
+                      <>
+                        {rowExamResultData.status === 'checked'
+                          ? 'Atualizar pontuação total'
+                          : 'Salvar como corrigido'}
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
             </div>
           </div>
         </>
+      )}
+
+      {isLoading && (
+        <>
+          <section className="w-full bg-white dark:bg-gray-900">
+            <div className="py-8 px-4 mx-auto max-w-screen-xl lg:py-48 lg:px-6">
+              <div className="mx-auto max-w-screen-sm text-center">
+                <BeatLoader color="Blue" size={50} />
+                <span className="mb-4 text-lg font-normal text-gray-500 dark:text-gray-400">
+                  Buscando detalhes
+                </span>
+              </div>
+            </div>
+          </section>
+        </>
+      )}
+      {!isLoading && !rowExamResultData && (
+        <section className="w-full bg-white dark:bg-gray-900">
+          <div className="py-8 px-4 mx-auto max-w-screen-xl lg:py-10 lg:px-6">
+            <div className="mx-auto max-w-screen-sm text-center">
+              <img src="/illustration/empty-folder.jpg" alt="" />
+              <p className="mb-4 text-3xl tracking-tight font-bold text-gray-900 md:text-4xl dark:text-white">
+                O registo não foi encontrado.
+              </p>
+              <p className="mb-4 text-lg font-light text-gray-500 dark:text-gray-400">
+                O registo que está procurando não existe ou foi apagado. Por
+                favor, recarregue ou tente novamente.
+              </p>
+            </div>
+          </div>
+        </section>
       )}
     </div>
   )

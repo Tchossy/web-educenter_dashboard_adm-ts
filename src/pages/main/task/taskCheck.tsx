@@ -202,6 +202,8 @@ export function TaskCheck() {
     setIsSending(true)
     const gradeInNumber: number = parseInt(grade) as number
     const markInNumber: number = rowTaskData?.mark as unknown as number
+    let result: string = ''
+
     if (gradeInNumber > markInNumber) {
       showToastBottom(
         'error',
@@ -209,8 +211,18 @@ export function TaskCheck() {
       )
       return
     }
+
+    if (gradeInNumber >= 80 && gradeInNumber <= 100) {
+      result = 'approved'
+    } else if (gradeInNumber >= 60 && gradeInNumber < 80) {
+      result = 'sufficient'
+    } else if (gradeInNumber >= 0 && gradeInNumber < 60) {
+      result = 'failed'
+    }
+
     const dataToSave = {
-      grade: grade
+      grade,
+      result: result
     }
 
     const resultSubmit = await TaskSubmissionViewModel.update(
@@ -422,7 +434,7 @@ export function TaskCheck() {
                         type="number"
                         htmlFor="grade"
                         label={`Cotação`}
-                        value={grade}
+                        defaultValue={rowTaskSubmissionData?.grade}
                         onChange={handleGrade}
                       />
                     </div>

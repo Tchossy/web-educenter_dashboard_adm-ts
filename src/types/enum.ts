@@ -1,9 +1,11 @@
 export type GenderType = 'male' | 'female'
 
+export type CourseStatusType = 'active' | 'inactive'
+
 export type TaskType = 'online' | 'upload'
 export type TaskStatusType = 'open' | 'closed' | 'pending'
 export type TaskResultStatusType = 'graded' | 'pending'
-export type TaskResultType = 'approved' | 'failed' | 'pending'
+export type TaskResultType = 'approved' | 'failed' | 'sufficient' | 'pending'
 
 export type ExamStatusType = 'scheduled' | 'completed'
 export type ExamResultType = 'approved' | 'failed' | 'pending'

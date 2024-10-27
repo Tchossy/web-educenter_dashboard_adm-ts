@@ -35,6 +35,7 @@ import { TaskEdit } from '../pages/main/task/taskEdit'
 import { ExamEdit } from '../pages/main/exam/examEdit'
 import { Performance } from '../pages/main/performance/performance'
 import { PerformanceWeekly } from '../pages/main/performance/performanceWeekly'
+import { DataSelectionPage } from '../pages/main/DataSelectionPage'
 
 // const Home = React.lazy(() => import('../pages/main/home'))
 export function Router() {
@@ -249,6 +250,18 @@ export function Router() {
               <React.Suspense fallback={<Loading />}>
                 <Private>
                   <Material />
+                </Private>
+              </React.Suspense>
+            }
+          />
+
+          {/* Data Selection Page */}
+          <Route
+            path={routsNameMain.dataSelectionPage}
+            element={
+              <React.Suspense fallback={<Loading />}>
+                <Private>
+                  <DataSelectionPage />
                 </Private>
               </React.Suspense>
             }

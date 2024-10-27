@@ -13,6 +13,8 @@ import ExamAnswerViewModel from '../../../../services/ViewModel/ExamAnswerViewMo
 import { showToastBottom } from '../../../../utils/toasts'
 import { ToastContainer } from 'react-toastify'
 import { converter } from '../../../../utils/converter'
+import { ExamQuestionInterface } from '../../../../interfaces/IExamQuestionInterface'
+import ExamQuestionViewModel from '../../../../services/ViewModel/ExamQuestionViewModel'
 
 interface Props {
   examAnswersData: ExamAnswerInterface[]
@@ -21,7 +23,11 @@ interface Props {
 
 export function ExamAnswers({ examAnswersData, onAnswersUpdate }: Props) {
   const [isSending, setIsSending] = useState<{ [key: string]: boolean }>({})
-  // Estado local para armazenar as respostas atualizadas
+
+  const [examQuestionsData, setExamQuestionsData] = useState<{
+    [key: string]: ExamQuestionInterface
+  }>({})
+
   const [updatedAnswers, setUpdatedAnswers] =
     useState<ExamAnswerInterface[]>(examAnswersData)
 
@@ -41,23 +47,44 @@ export function ExamAnswers({ examAnswersData, onAnswersUpdate }: Props) {
   const handleChange = (
     id: string,
     key: keyof ExamAnswerInterface,
-    value: any
+    value: any,
+    questionId?: string
   ) => {
-    setUpdatedAnswers(prevAnswers =>
-      prevAnswers.map(answer =>
-        answer?.id === id ? { ...answer, [key]: value } : answer
+    const questionType = examQuestionsData[questionId as string]?.question_type
+
+    if (questionType === 'multiple_choice') {
+      showToastBottom(
+        'error',
+        'Não pode alterar o valor de uma questão multipla escolha'
       )
-    )
+    } else {
+      setUpdatedAnswers(prevAnswers =>
+        prevAnswers.map(answer =>
+          answer?.id === id ? { ...answer, [key]: value } : answer
+        )
+      )
+    }
   }
 
   // Função chamada ao clicar no botão salvar
   const handleSave = async (answer: ExamAnswerInterface) => {
     setIsSending(prev => ({ ...prev, [answer.id as string]: true }))
 
+    const maxMarkNumber = examQuestionsData[answer.question_id]?.value || 100
+
     const markValue = converter.stringToNumber(answer.mark)
 
     if (markValue < 0) {
       showToastBottom('error', 'A cotação não pode ser inferior a zero')
+      setIsSending(prev => ({ ...prev, [answer.id as string]: false }))
+    } else if (markValue > converter.stringToNumber(maxMarkNumber as string)) {
+      showToastBottom(
+        'error',
+        `A cotação não pode ser superior a ${maxMarkNumber}`
+      )
+      setIsSending(prev => ({ ...prev, [answer.id as string]: false }))
+    } else if (markValue > 100) {
+      showToastBottom('error', 'A cotação não pode ser superior a 100')
       setIsSending(prev => ({ ...prev, [answer.id as string]: false }))
     } else {
       const dataToSave: ExamAnswerMarkInterface = {
@@ -86,11 +113,43 @@ export function ExamAnswers({ examAnswersData, onAnswersUpdate }: Props) {
     }
   }
 
+  // Exam
+  async function fetchExamData() {
+    try {
+      const response = await ExamQuestionViewModel.getAll()
+      if (response.error) {
+        showToastBottom('error', 'Não foi possível carregar as perguntas')
+        console.error(response.error)
+      } else {
+        const dataExamArray = response.data as ExamQuestionInterface[]
+
+        // Transforme o array em um objeto indexado por `question_id`
+        const dataExamObject = dataExamArray.reduce((acc, question) => {
+          acc[question.id as string] = question
+          return acc
+        }, {} as { [key: string]: ExamQuestionInterface })
+
+        setExamQuestionsData(dataExamObject)
+      }
+    } catch (err) {
+      showToastBottom('error', 'Erro ao carregar dados do exame')
+      console.error(err)
+    }
+  }
+
+  useEffect(() => {
+    fetchExamData()
+  }, [])
+
   return (
     <div className="w-full gap-4 p-4 border border-gray-300 dark:border-gray-600 rounded-md">
       <ToastContainer />
       {updatedAnswers.map((answer, answerIndex) => {
         const currentIndex = answerIndex + 1
+        const questionType =
+          examQuestionsData[answer?.question_id as string]?.question_type
+        const isMultiChoice = questionType === 'multiple_choice'
+
         return (
           <div
             key={answer?.id}
@@ -107,40 +166,57 @@ export function ExamAnswers({ examAnswersData, onAnswersUpdate }: Props) {
             </div>
 
             <div className="flex flex-row gap-3 items-end">
-              <div className="">
-                <InputCheckbox
-                  htmlFor="is_valid"
-                  label="Correta"
-                  value={answer.is_correct}
-                  onChange={isChecked =>
-                    handleChange(answer?.id as string, 'is_correct', isChecked)
-                  }
-                />
-              </div>
+              {isMultiChoice && (
+                <div className="">
+                  <InputCheckbox
+                    htmlFor="is_valid"
+                    isDisabled={isMultiChoice}
+                    label="Correta"
+                    value={answer.is_correct}
+                    onChange={isChecked =>
+                      handleChange(
+                        answer?.id as string,
+                        'is_correct',
+                        isChecked
+                      )
+                    }
+                  />
+                </div>
+              )}
 
               <div className="w-full max-w-[6rem]">
                 <InputLabelSimple
                   type="number"
                   htmlFor="mark"
+                  isDisabled={isMultiChoice}
                   label={`Cotação`}
                   value={answer.mark}
-                  onChange={e => handleChange(answer?.id as string, 'mark', e)}
+                  onChange={e =>
+                    handleChange(
+                      answer?.id as string,
+                      'mark',
+                      e,
+                      answer?.question_id
+                    )
+                  }
                 />
               </div>
 
-              <button
-                disabled={isSending[answer?.id as string]}
-                onClick={() => handleSave(answer)}
-                className="w-[4rem] h-[2.6rem] px-3 rounded-lg bg-blue-500 text-white hover:bg-blue-600 active:bg-blue-900 flex flex-row items-center justify-center gap-2 transition-all duration-300"
-              >
-                {isSending[answer?.id as string] && (
-                  <>
-                    <BeatLoader color="white" size={10} />
-                  </>
-                )}
+              {!isMultiChoice && (
+                <button
+                  disabled={isSending[answer?.id as string]}
+                  onClick={() => handleSave(answer)}
+                  className="w-[4rem] h-[2.6rem] px-3 rounded-lg bg-blue-500 text-white hover:bg-blue-600 active:bg-blue-900 flex flex-row items-center justify-center gap-2 transition-all duration-300"
+                >
+                  {isSending[answer?.id as string] && (
+                    <>
+                      <BeatLoader color="white" size={10} />
+                    </>
+                  )}
 
-                {!isSending[answer?.id as string] && <span>Salvar</span>}
-              </button>
+                  {!isSending[answer?.id as string] && <span>Salvar</span>}
+                </button>
+              )}
             </div>
           </div>
         )

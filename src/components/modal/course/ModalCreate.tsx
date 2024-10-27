@@ -65,7 +65,7 @@ export function ModalCreateCourse({
   handleUpdateListing,
   modalCreateRowIsOpen,
   setModalCreateRowIsOpen
-}: modalCreateType) {
+}: modalCreateType<CourseInterface>) {
   // Loading
   const [uploading, setUploading] = useState<boolean>(false)
   const [urlPhotoUploaded, setUrlPhotoUploaded] = useState<string | null>(null)

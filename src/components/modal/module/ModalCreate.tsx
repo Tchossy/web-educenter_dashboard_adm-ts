@@ -73,7 +73,7 @@ export function ModalCreateModule({
   handleUpdateListing,
   modalCreateRowIsOpen,
   setModalCreateRowIsOpen
-}: modalCreateType) {
+}: modalCreateType<ModuleInterface>) {
   // Loading
   const [isSend, setIsSend] = useState<boolean>(false)
 

@@ -41,5 +41,7 @@ export const routsNameMain = {
     checkString: `/task/result/check`
   },
 
-  material: `/material`
+  material: `/material`,
+
+  dataSelectionPage: `/DataSelectionPage`
 }

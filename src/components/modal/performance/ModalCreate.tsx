@@ -110,7 +110,7 @@ export function ModalCreateWeeklyAverage({
     await TaskSubmissionViewModel.getAllByStudent(baseInfo?.id as string).then(
       response => {
         if (response.error) {
-          showToast('error', response.msg as string)
+          console.log('error Task => ', response.msg as string)
         } else {
           const arrayData =
             response.data as unknown as TaskSubmissionInterface[]
@@ -127,7 +127,7 @@ export function ModalCreateWeeklyAverage({
     await ExamResultViewModel.getAllByStudent(baseInfo?.id as string).then(
       response => {
         if (response.error) {
-          showToast('error', response.msg as string)
+          console.log('error Exam => ', response.msg as string)
         } else {
           const arrayData = response.data as unknown as ExamResultInterface[]
 
