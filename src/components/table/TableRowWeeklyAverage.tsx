@@ -22,10 +22,10 @@ export const TableRowWeeklyAverage: React.FC<TableRowProps> = ({
       <td className="px-3 py-3 min-w-[6rem]">
         <p>#{rowItem.id}</p>
       </td>
-      <td className="px-3 py-3 min-w-[6rem] max-w-[20rem]">
+      <td className="px-3 py-3 min-w-[12rem] max-w-[20rem]">
         <p>{rowItem.week_start}</p>
       </td>
-      <td className="px-3 py-3 min-w-[6rem] max-w-[20rem]">
+      <td className="px-3 py-3 min-w-[12rem] max-w-[20rem]">
         <p>{rowItem.week_end}</p>
       </td>
       <td className="px-3 py-3 min-w-[6rem] max-w-[20rem]">

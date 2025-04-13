@@ -1,14 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 // Lib
 import { useParams } from 'react-router-dom'
 import Modal from 'react-modal'
-import { BeatLoader } from 'react-spinners'
 import { ToastContainer } from 'react-toastify'
 
 // Icon
 import { X } from 'lucide-react'
-import { MdUpdate } from 'react-icons/md'
 
 // Form
 import { useForm } from 'react-hook-form'
@@ -37,6 +35,7 @@ import { ExamQuestionInterface } from '../../../interfaces/IExamQuestionInterfac
 
 // Utils
 import { showToast } from '../../../utils/toasts'
+import { TextAreaLabel } from '../../input/TextAreaLabelZod'
 
 const formSchema = z.object({
   question_text: z.string({
@@ -75,7 +74,7 @@ export function ModalCreateExamQuestion({
   handleUpdateListing,
   modalCreateRowIsOpen,
   setModalCreateRowIsOpen
-}: modalCreateType) {
+}: modalCreateType<ExamQuestionInterface>) {
   // Params
   const { examId } = useParams()
 
@@ -91,8 +90,8 @@ export function ModalCreateExamQuestion({
     reset,
     control,
     handleSubmit,
-    formState: { errors },
-    watch // Observa as mudanças no formulário
+    formState: { errors }
+    // watch // Observa as mudanças no formulário
   } = useForm<formType>({
     resolver: zodResolver(formSchema)
   })
@@ -101,7 +100,7 @@ export function ModalCreateExamQuestion({
   }
 
   // Observa o campo de opções
-  const watchOptions = watch('options_modal')
+  // const watchOptions = watch('options_modal')
 
   // Modal
   function closeModal() {
@@ -214,6 +213,19 @@ export function ModalCreateExamQuestion({
                   />
                 </div>
               </div>
+
+              {questionType === 'short_answer' && (
+                <div className="w-full mt-4 flex flex-col gap-4">
+                  <div className="w-full min-w-[66px]">
+                    <TextAreaLabel
+                      htmlFor={`question_answer`}
+                      label={`Resposta correta`}
+                      placeholder="Resposta"
+                      control={control}
+                    />
+                  </div>
+                </div>
+              )}
 
               {questionType === 'multiple_choice' && (
                 <div className="w-full mt-4 flex flex-col gap-4">

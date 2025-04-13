@@ -5,16 +5,16 @@ import { ExamInterface } from '../../interfaces/IExamInterface'
 import { TaskInterface } from '../../interfaces/ITaskInterface'
 import {
   courseData,
-  examData,
+  // examData,
   examQuestionsStudentData,
   examResultData,
   examStudentData,
   moduleData,
-  taskData,
+  // taskData,
   taskStudentData,
-  taskStudentData2,
-  taskSubmissionsStudentData,
-  taskSubmissionsStudentData2
+  // taskStudentData2,
+  taskSubmissionsStudentData
+  // taskSubmissionsStudentData2
 } from '../../data/tableData'
 import ModuleViewModel from '../../services/ViewModel/ModuleViewModel'
 import ExamViewModel from '../../services/ViewModel/ExamViewModel'

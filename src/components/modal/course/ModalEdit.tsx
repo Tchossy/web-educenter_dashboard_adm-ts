@@ -12,7 +12,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 
 // Services
-import uploadViewModel from '../../../services/ViewModel/uploadViewModel'
+import uploadViewModel from '../../../services/ViewModel/UploadViewModel'
 import CourseViewModel from '../../../services/ViewModel/CourseViewModel'
 
 // Interfaces
@@ -65,7 +65,6 @@ export function ModalEditCourse({
   setModalEditRowIsOpen
 }: modalEditeType<CourseInterface>) {
   // Loading
-  const [uploading, setUploading] = useState<boolean>(false)
   const [isSend, setIsSend] = useState<boolean>(false)
 
   // State

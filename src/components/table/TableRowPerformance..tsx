@@ -1,10 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { FiEdit } from 'react-icons/fi'
 import { GrDocumentPerformance } from 'react-icons/gr'
-import { AiFillDelete } from 'react-icons/ai'
 import { BadgeAction } from '../badge/BadgeAction'
-import { BadgeSimple } from '../badge/BadgeSimple'
 import { StudentInterface } from '../../interfaces/IStudentInterface'
 import { CourseInterface } from '../../interfaces/ICourseInterface'
 import { ModuleInterface } from '../../interfaces/IModuleInterface'
@@ -105,12 +102,12 @@ export const TableRowPerformance: React.FC<TableRowProps> = ({ rowItem }) => {
       <td className="px-3 py-3 min-w-[6rem]">
         <p>{rowItem.phone}</p>
       </td>
-      <td className="px-3 py-3 min-w-[6rem]">{rowsCourseData?.name}</td>
-      <td className="px-3 py-3 min-w-[6rem]">{rowsModuleData?.name}</td>
+      <td className="px-3 py-3 min-w-[12rem]">{rowsCourseData?.name}</td>
+      <td className="px-3 py-3 min-w-[12rem]">{rowsModuleData?.name}</td>
       <td className="px-3 py-3 min-w-[6rem]">
         <p>{rowItem.date_create}</p>
       </td>
-      <td className="px-3 py-3 min-w-[6rem]">
+      <td className="px-3 py-3 min-w-[12rem]">
         <div className="flex flex-row justify-start items-center gap-4">
           <BadgeAction
             color="blue"

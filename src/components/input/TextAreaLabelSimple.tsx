@@ -1,5 +1,4 @@
 import { ChangeEvent } from 'react'
-import { Controller } from 'react-hook-form'
 
 interface TextAreaLabelSimpleProps {
   error?: boolean // Erros do react-hook-form

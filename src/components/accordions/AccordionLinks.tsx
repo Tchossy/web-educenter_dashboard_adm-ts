@@ -1,15 +1,15 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { AiOutlineLine } from 'react-icons/ai'
 import { BsPlusLg } from 'react-icons/bs'
 
-interface AccordionLinkssContentProps {
+interface AccordionLinksContentProps {
   title: string
   link: string
 }
 
 interface AccordionLinksItem {
   title: string
-  content: AccordionLinkssContentProps[]
+  content: AccordionLinksContentProps[]
 }
 
 interface AccordionLinksProps {

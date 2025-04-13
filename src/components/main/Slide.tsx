@@ -1,5 +1,5 @@
 import { useContext } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import {
   LayoutDashboard,
   Lock,
@@ -19,7 +19,6 @@ import { routsNameMain } from '../../data/routsName'
 import { AppContext } from '../../provider/AppProvider'
 
 export const Slide = () => {
-  const navigate = useNavigate()
   const { menuIsVisible } = useContext(AppContext)
 
   const dash = [
@@ -149,7 +148,8 @@ export const Slide = () => {
             className="w-full py-2 px-3 flex items-center justify-between gap-2 hover:bg-gray-100 dark:hover:bg-gray-500 rounded-md transition-all duration-200 hover:pl-3  "
           >
             <div className="flex flex-row items-center justify-start gap-3 ">
-              {item.icon}
+              <span>{item.icon}</span>
+
               <span
                 className={`${!menuIsVisible && 'hidden'} group-hover:flex`}
               >

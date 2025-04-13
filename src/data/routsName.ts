@@ -1,5 +1,3 @@
-const baseMain = 'main'
-
 export const routsNameMain = {
   home: `/`,
   admin: `/admin`,

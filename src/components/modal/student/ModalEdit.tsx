@@ -12,7 +12,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 
 // Services
-import uploadViewModel from '../../../services/ViewModel/uploadViewModel'
+import uploadViewModel from '../../../services/ViewModel/UploadViewModel'
 import StudentViewModel from '../../../services/ViewModel/StudentViewModel'
 // Interfaces
 import { StudentInterface } from '../../../interfaces/IStudentInterface'
@@ -114,7 +114,6 @@ export function ModalEditStudent({
   setModalEditRowIsOpen
 }: modalEditeType<StudentInterface>) {
   // Loading
-  const [uploading, setUploading] = useState<boolean>(false)
   const [isSend, setIsSend] = useState<boolean>(false)
 
   const [rowsCourseData, setRowsCourseData] = useState<OptionType[]>([])
@@ -250,7 +249,7 @@ export function ModalEditStudent({
     // Get
     await CourseViewModel.getAll().then(response => {
       if (response.error) {
-        showToast('error', response.msg as string)
+        console.error('error', response.msg as string)
       } else {
         const arrayData = response.data as CourseInterface[]
 
@@ -272,7 +271,7 @@ export function ModalEditStudent({
     await ModuleViewModel.getAllByCourse(course_id)
       .then(response => {
         if (response.error) {
-          showToast('error', response.msg as string)
+          console.error('error', response.msg as string)
         } else {
           const arrayData = response.data as ModuleInterface[]
 
@@ -285,7 +284,7 @@ export function ModalEditStudent({
         }
       })
       .catch(err => {
-        showToast('error', err as string)
+        console.error('error', err as string)
       })
   }
 

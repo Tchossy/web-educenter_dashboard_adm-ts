@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronUp } from 'lucide-react'
-import React, { useContext, useState } from 'react'
+import { useContext, useState } from 'react'
 import { AppContext } from '../../provider/AppProvider'
 
 interface AccordionItem {

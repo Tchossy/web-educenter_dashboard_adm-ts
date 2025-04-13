@@ -10,7 +10,7 @@ export interface TaskInterface {
   module_id?: string // Relacionamento com o módulo
   mark: string // Nota que a tarefa vale
 
-  task_type: TaskType // "online", "upload"
+  task_type?: TaskType // "online", "upload"
   due_date: string // Data limite
   status: TaskStatusType // ex: 'open' | 'closed' | 'pending'
 

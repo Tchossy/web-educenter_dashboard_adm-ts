@@ -2,10 +2,8 @@ import { useEffect, useState } from 'react'
 
 // Lib
 import { ToastContainer } from 'react-toastify'
+import { MdOutlinePlaylistAdd } from 'react-icons/md'
 import { BeatLoader } from 'react-spinners'
-
-// Icon
-import { Download, X } from 'lucide-react'
 
 // Form
 import { useForm } from 'react-hook-form'
@@ -13,18 +11,14 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 
 // Services
-import uploadViewModel from '../../../services/ViewModel/uploadViewModel'
+import uploadViewModel from '../../../services/ViewModel/UploadViewModel'
 import TaskViewModel from '../../../services/ViewModel/TaskViewModel'
 import CourseViewModel from '../../../services/ViewModel/CourseViewModel'
 import ModuleViewModel from '../../../services/ViewModel/ModuleViewModel'
 
 // Data
-import {
-  materialTypeOptions,
-  statusTaskOptions,
-  typeTaskOptions
-} from '../../../data/selectOption'
 import { routsNameMain } from '../../../data/routsName'
+import { statusTaskOptions } from '../../../data/selectOption'
 
 // Component
 import { CustomInput } from '../../../components/input/InputLabel'
@@ -36,14 +30,17 @@ import { Breadcrumbs } from '../../../components/Breadcrumbs'
 import { TaskInterface } from '../../../interfaces/ITaskInterface'
 
 // Utils
-import { showToastBottom } from '../../../utils/toasts'
+// import { showToastBottom } from '../../../utils/toasts'
 // Interfaces
+import { CourseInterface } from '../../../interfaces/ICourseInterface'
 import { ModuleInterface } from '../../../interfaces/IModuleInterface'
 // Types
 import { OptionType } from '../../../types/option'
-import { TaskType } from '../../../types/enum'
-import { CourseInterface } from '../../../interfaces/ICourseInterface'
+import { TaskQuestionInterface } from '../../../interfaces/ITaskQuestionInterface'
+import TaskQuestionViewModel from '../../../services/ViewModel/TaskQuestionViewModel'
 import { useParams } from 'react-router-dom'
+import { TaskQuestionEditInput } from './components/TaskQuestionEditInput'
+import { ModalCreateTaskQuestion } from '../../../components/modal/taskQuestion/ModalCreate'
 
 const formSchema = z.object({
   name: z
@@ -77,14 +74,6 @@ const formSchema = z.object({
       required_error: 'A nota total é obrigatória (em %)'
     })
     .min(1, 'O valor do exame tem que ser maior de 1'),
-  task_type: z.string().refine(
-    value => {
-      return value === 'online' || value === 'upload'
-    },
-    {
-      message: 'Por favor, selecione uma opção válida'
-    }
-  ),
   due_date: z.string().refine(
     value => {
       return value != ''
@@ -111,26 +100,28 @@ export function TaskEdit() {
 
   // State
   const [baseInfo, setBaseInfo] = useState<TaskInterface | null>(null)
+  const [taskQuestions, setTaskQuestions] = useState<
+    TaskQuestionInterface[] | null
+  >(null)
 
   const [isLoading, setIsLoading] = useState<boolean>(true)
-  const [isSend, setIsSend] = useState<boolean>(false)
-  const [uploading, setUploading] = useState<boolean>(false)
-
-  const [taskType, setTaskType] = useState<TaskType>('online')
+  const [isError, setIsError] = useState<boolean>(false)
+  const [isErrorMessage, setIsErrorMessage] = useState<string>('')
+  const [isSending, setIsSending] = useState<boolean>(false)
 
   const [rowsCourseData, setRowsCourseData] = useState<OptionType[]>([])
   const [rowsModuleData, setRowsModuleData] = useState<OptionType[]>([])
+
+  // Modal
+  const [modalCreateRowIsOpen, setModalCreateRowIsOpen] =
+    useState<boolean>(false)
 
   // Image
   const [selectedImageFile, setSelectedImageFile] = useState<string>('')
   const [urlImageUploaded, setUrlImageUploaded] = useState<string | null>(null)
   const [imageSelect, setImageSelect] = useState<string>('')
 
-  // Pdf
-  const [selectedPdfFile, setSelectedPdfFile] = useState<string>('')
-  const [urlPdfUploaded, setUrlPdfUploaded] = useState<string | null>(null)
-
-  // Const
+  // Consts
   const namePageEntry = 'Editar tarefa'
   const namePageUppercase = 'Tarefas'
 
@@ -148,7 +139,6 @@ export function TaskEdit() {
     course_id: '',
     module_id: '',
     mark: '',
-    task_type: 'online',
     due_date: '',
     status: 'pending'
   }
@@ -172,16 +162,6 @@ export function TaskEdit() {
     setImageSelect(URL.createObjectURL(file))
   }
 
-  const onTaskPdfChange = (e: any) => {
-    const [file] = e.target.files
-    const pdf = e.target.files[0]
-    setSelectedPdfFile(pdf)
-  }
-
-  const handleTaskTypeChange = (value: any) => {
-    setTaskType(value)
-  }
-
   // Handle Select
   const handleCourseChange = (course: string) => {
     console.log(`Selected course: ${course}`)
@@ -195,14 +175,51 @@ export function TaskEdit() {
     console.log(`Selected State: ${gender}`)
   }
 
+  // Modal
+  function openModalCreateRow() {
+    setModalCreateRowIsOpen(true)
+  }
+
+  // Delete row
+  function handleDeleteRow(id: string) {
+    swal({
+      title: 'Tem certeza?',
+      text: 'Uma vez excluído, você não poderá recuperar!',
+      buttons: ['Cancelar', 'Confirmar'],
+      icon: 'warning',
+      dangerMode: true
+    }).then(async willDelete => {
+      if (willDelete) {
+        await TaskQuestionViewModel.delete(id).then(response => {
+          console.log(response)
+
+          if (response.error) {
+            swal(`Erro ao deletar registo: ${response.msg}`, {
+              icon: 'error'
+            })
+            console.error('', response.msg)
+          } else {
+            swal('Deletado com sucesso', {
+              icon: 'success'
+            })
+
+            fetchTaskData()
+          }
+        })
+      } else {
+        swal('O registo está seguro!', {
+          icon: 'error'
+        })
+      }
+    })
+  }
+
   // Function Upload
   async function handleUploadImage(): Promise<{
     urlImage: string
     msgUpload: string
   }> {
     console.log('Uploading...')
-
-    setUploading(true)
 
     const formData = new FormData()
     formData.append('imageTask', selectedImageFile)
@@ -221,41 +238,16 @@ export function TaskEdit() {
     }
   }
 
-  // Function Upload
-  async function handleUploadPdf(): Promise<{
-    urlTaskInstruction: string
-    msgUpload: string
-  }> {
-    console.log('Uploading pdf...')
-
-    setUploading(true)
-
-    const formData = new FormData()
-    formData.append('pdfTaskInstruction', selectedPdfFile)
-
-    const result = await uploadViewModel.uploadTaskInstructionPdf(formData)
-
-    if (result.error) {
-      throw new Error(result.msg)
-    }
-
-    const urlTaskInstruction = result.url as string
-    const msgUpload = result.msg as string
-    return {
-      urlTaskInstruction,
-      msgUpload
-    }
-  }
-
   // Function Submit Form
   async function handleSubmitForm(dataForm: any) {
-    setIsSend(true)
+    setIsSending(true)
 
     try {
-      let urlPdfToSave = urlPdfUploaded ? urlPdfUploaded : ''
       let urlImageToSave = urlImageUploaded ? urlImageUploaded : ''
 
       if (selectedImageFile) {
+        console.log('selectedImageFile')
+
         if (!urlImageUploaded) {
           const resUrl = await handleUploadImage()
 
@@ -265,25 +257,10 @@ export function TaskEdit() {
           setUrlImageUploaded(urlImage)
 
           if (!urlImage) {
-            showToastBottom('error', msgUpload)
-            setIsSend(false)
-            return
-          }
-        }
-      }
+            setIsError(true)
+            setIsErrorMessage(msgUpload)
 
-      if (selectedPdfFile) {
-        if (!urlPdfUploaded) {
-          const resUrl = await handleUploadPdf()
-
-          const { urlTaskInstruction, msgUpload } = resUrl
-          urlPdfToSave = urlTaskInstruction
-
-          setUrlPdfUploaded(urlTaskInstruction)
-
-          if (!urlTaskInstruction) {
-            showToastBottom('error', msgUpload)
-            setIsSend(false)
+            setIsSending(false)
             return
           }
         }
@@ -291,8 +268,7 @@ export function TaskEdit() {
 
       const dataToSave: TaskInterface = {
         ...dataForm,
-        image: urlImageToSave,
-        file_url: urlPdfToSave
+        image: urlImageToSave
       }
 
       const resultSubmit = await TaskViewModel.update(
@@ -301,38 +277,27 @@ export function TaskEdit() {
       )
 
       if (resultSubmit.error) {
-        showToastBottom('error', resultSubmit.msg)
-        setIsSend(false)
+        setIsErrorMessage(resultSubmit.msg as string)
+        setIsError(true)
+        setIsSending(false)
       } else {
-        showToastBottom('success', resultSubmit.msg)
+        console.log('success', 'Tarefa atualizado com sucesso')
+
         setTimeout(() => {
-          setIsSend(false)
+          setIsSending(false)
         }, 3000)
       }
     } catch (error) {
-      showToastBottom('error', String(error) as string)
-      setIsSend(false)
+      setIsErrorMessage(String(error) as string)
+      setIsError(true)
+      setIsSending(false)
     }
+
+    setTimeout(() => {
+      setIsError(false)
+    }, 5000)
   }
 
-  // Function Task
-  async function fetchTaskData() {
-    // Clear
-    setBaseInfo(null)
-
-    // Get
-    await TaskViewModel.getOne(taskId as string).then(response => {
-      if (response.error) {
-        // alert(response.msg as string)
-        // showToastBottom('error', response.msg as string)
-      } else {
-        const data = response.data as TaskInterface
-
-        setBaseInfo(data)
-      }
-      setIsLoading(false)
-    })
-  }
   // Function Course
   async function fetchCourseData() {
     // Clear
@@ -341,7 +306,8 @@ export function TaskEdit() {
     // Get
     await CourseViewModel.getAll().then(response => {
       if (response.error) {
-        showToastBottom('error', response.msg as string)
+        setIsError(true)
+        console.log('error', response.msg as string)
       } else {
         const arrayData = response.data as CourseInterface[]
 
@@ -363,7 +329,8 @@ export function TaskEdit() {
     await ModuleViewModel.getAllByCourse(course_id)
       .then(response => {
         if (response.error) {
-          showToastBottom('error', response.msg as string)
+          setIsError(true)
+          console.log('error', response.msg as string)
         } else {
           const arrayData = response.data as ModuleInterface[]
 
@@ -376,9 +343,56 @@ export function TaskEdit() {
         }
       })
       .catch(err => {
-        showToastBottom('error', err as string)
+        setIsError(true)
+        console.log('error', err as string)
       })
   }
+
+  // Function Task
+  async function fetchTaskData() {
+    // Clear
+    setBaseInfo(null)
+
+    // Get
+    await TaskViewModel.getOne(taskId as string).then(response => {
+      if (response.error) {
+        // alert(response.msg as string)
+        // showToastBottom('error', response.msg as string)
+        console.log('error', response.msg as string)
+      } else {
+        const data = response.data as TaskInterface
+
+        setBaseInfo(data)
+      }
+      setIsLoading(false)
+    })
+  }
+
+  // Function Task
+  async function fetchTaskQuestionData() {
+    // Clear
+    setTaskQuestions(null)
+
+    // Get
+    await TaskViewModel.getAllByTask(taskId as string).then(response => {
+      if (response.error) {
+        // alert(response.msg as string)
+        // showToastBottom('error', response.msg as string)
+        console.log('error', response.msg as string)
+      } else {
+        const data = response.data as TaskQuestionInterface[]
+
+        setTaskQuestions(data)
+      }
+      setIsLoading(false)
+    })
+  }
+
+  // Update Listing
+  const handleUpdateListing = () => {
+    fetchTaskQuestionData()
+  }
+
   useEffect(() => {
     if (baseInfo) {
       reset({
@@ -387,12 +401,13 @@ export function TaskEdit() {
         course_id: baseInfo.course_id,
         module_id: baseInfo.module_id,
         mark: baseInfo.mark,
-        task_type: baseInfo.task_type,
         due_date: baseInfo.due_date,
         status: baseInfo.status
       })
       setImageSelect(baseInfo?.image as string)
       fetchModuleData(baseInfo?.course_id as string)
+
+      fetchTaskQuestionData()
     }
   }, [baseInfo, reset])
 
@@ -400,6 +415,10 @@ export function TaskEdit() {
     fetchTaskData()
     fetchCourseData()
   }, [taskId])
+
+  useEffect(() => {
+    fetchCourseData()
+  }, [])
 
   return (
     <div className="w-full h-full flex flex-col justify-start items-start gap-6">
@@ -426,20 +445,42 @@ export function TaskEdit() {
             <div className="w-full flex flex-col items-start justify-between gap-4">
               <Breadcrumbs items={itemsBreadcrumbs} />
               <h1 className="text-2xl font-bold text-dark dark:text-light ">
-                {namePageEntry}
+                {namePageEntry} {taskId && `/ ${taskId}`}
               </h1>
             </div>
           </div>
 
           <div className="w-full p-6 flex flex-col justify-start items-start gap-6 rounded-md bg-light dark:bg-dark">
-            <div className="w-full h-full flex items-center justify-center ">
+            <div className="w-full h-full flex flex-col items-center justify-center ">
               <form
                 onSubmit={handleSubmit(handleSubmitForm)}
                 className="w-full p-6 flex flex-col justify-center items-center gap-6"
               >
+                {isError && (
+                  <div
+                    className="w-full flex items-center p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400"
+                    role="alert"
+                  >
+                    <svg
+                      className="flex-shrink-0 inline w-4 h-4 me-3"
+                      aria-hidden="true"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z" />
+                    </svg>
+                    <span className="sr-only">Info</span>
+                    <div>
+                      <span className="font-medium">Erro: </span>{' '}
+                      {isErrorMessage}
+                    </div>
+                  </div>
+                )}
+
                 <div className="w-full flex flex-col items-start justify-start">
                   <label className="block mb-2 text-sm font-medium dark:text-light text-gray-600">
-                    Imagem do tarefa
+                    Imagem da tarefa
                   </label>
                   <div className="w-full max-w-[14rem] flex items-start justify-start ">
                     <label
@@ -485,7 +526,6 @@ export function TaskEdit() {
                       <input
                         id="dropzone-file"
                         type="file"
-                        disabled={isSend}
                         className="hidden"
                         onChange={onImageChange}
                       />
@@ -496,9 +536,9 @@ export function TaskEdit() {
                 <div className="w-full grid gap-6 md:grid-cols-1">
                   <CustomInput
                     type="text"
+                    isDisabled={isSending}
                     htmlFor="name"
-                    label="Titulo do tarefa"
-                    isDisabled={isSend}
+                    label="Titulo da tarefa"
                     placeholder="Ex.: Desenvolvimento Web"
                     control={control}
                     error={errors.name}
@@ -508,8 +548,8 @@ export function TaskEdit() {
                 <div className="w-full grid gap-6 md:grid-cols-1">
                   <TextAreaLabel
                     htmlFor="description"
+                    isDisabled={isSending}
                     label="Descrição"
-                    isDisabled={isSend}
                     placeholder="Ex.: Curso completo de Desenvolvimento Web com foco em HTML, CSS, JavaScript e frameworks modernos."
                     control={control}
                     error={errors.description}
@@ -520,7 +560,7 @@ export function TaskEdit() {
                   <SelectCustomZod
                     name="course_id"
                     label="Curso"
-                    isDisabled={isSend}
+                    isDisabled={isSending}
                     control={control}
                     error={errors.course_id}
                     options={rowsCourseData}
@@ -529,7 +569,7 @@ export function TaskEdit() {
                   <SelectCustomZod
                     name="module_id"
                     label="Modulo"
-                    isDisabled={isSend}
+                    isDisabled={isSending}
                     control={control}
                     error={errors.module_id}
                     options={rowsModuleData}
@@ -538,19 +578,19 @@ export function TaskEdit() {
                   <CustomInput
                     type="number"
                     htmlFor="mark"
-                    label="Valor do exame"
-                    isDisabled={isSend}
+                    isDisabled={isSending}
+                    label="Valor da tarefa"
                     placeholder="Ex.: 100"
                     control={control}
                     error={errors.mark}
                   />
                 </div>
 
-                <div className="w-full grid gap-6 md:grid-cols-3">
+                <div className="w-full grid gap-6 md:grid-cols-4">
                   <SelectCustomZod
                     name="status"
                     label="Estado"
-                    isDisabled={isSend}
+                    isDisabled={isSending}
                     control={control}
                     error={errors.status}
                     options={statusTaskOptions}
@@ -561,66 +601,53 @@ export function TaskEdit() {
                     type="date"
                     htmlFor="due_date"
                     label="Data limite de entrega"
-                    isDisabled={isSend}
+                    isDisabled={isSending}
                     control={control}
                     error={errors.due_date}
                   />
-
-                  <SelectCustomZod
-                    name="task_type"
-                    label="Tipo de tarefa"
-                    isDisabled={isSend}
-                    control={control}
-                    error={errors.task_type}
-                    options={typeTaskOptions}
-                    onOptionChange={handleTaskTypeChange}
-                  />
-
-                  <div className="flex flex-col gap-2">
-                    <label className="block text-sm font-medium dark:text-light text-gray-600">
-                      Upload das instruções (PDF)
-                    </label>
-                    <input
-                      disabled={isSend}
-                      id="dropzone-file"
-                      type="file"
-                      accept="application/pdf"
-                      className={`w-full border dark:bg-gray-700/60 bg-gray-100/10  dark:border-gray-500/60 border-gray-300/60 dark:text-gray-300 text-gray-500 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block`}
-                      onChange={onTaskPdfChange}
-                    />
-                  </div>
                 </div>
-
-                {baseInfo.file_url && !selectedPdfFile && (
-                  <div className="w-full flex flex-row gap-2">
-                    <Download size={22} className="text-blue-500" />
-                    <a
-                      href={baseInfo.file_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="cursor-pointer text-blue-500 font-semibold"
-                    >
-                      Abrir instruções disponibilizada
-                    </a>
-                  </div>
-                )}
 
                 <div className="w-full">
                   <button
                     type="submit"
-                    disabled={isSend}
-                    className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-2 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                    className="w-[16rem] h-[2.6rem] min-w-[12rem] px-3 rounded-lg bg-primary-200 text-white hover:bg-primary-500 active:bg-primary-700 flex flex-row items-center justify-center gap-2 transition-all duration-300 "
                   >
-                    {isSend && (
+                    {isSending && (
                       <>
                         <BeatLoader color="white" size={10} />
                       </>
                     )}
 
-                    {!isSend && <span>Salvar alterações</span>}
+                    {!isSending && <span>Salvar alterações</span>}
                   </button>
                 </div>
               </form>
+              {/* Star Task Question */}
+              <div className="w-full flex flex-col gap-4">
+                <h3 className="text-xl font-semibold">Perguntas da tarefa</h3>
+                {/* Question Task Start */}
+                {taskQuestions?.map(
+                  (question: TaskQuestionInterface, index) => (
+                    <TaskQuestionEditInput
+                      index={index + 1}
+                      task_id={taskId as string}
+                      baseInfo={question}
+                      handleDeleteRow={handleDeleteRow}
+                    />
+                  )
+                )}
+                {/* Question TaskEnd */}
+
+                <button
+                  type="button"
+                  onClick={openModalCreateRow}
+                  className="w-[16rem] h-[2.6rem] min-w-[12rem] px-4 py-2 rounded-lg bg-green-500 text-white hover:bg-green-600 active:bg-green-900 flex flex-row items-center justify-center gap-2 transition-all duration-300"
+                >
+                  <MdOutlinePlaylistAdd className="text-2xl" />
+                  Adicionar Pergunta
+                </button>
+              </div>
+              {/* End Task Question */}
             </div>
           </div>
         </>
@@ -641,6 +668,14 @@ export function TaskEdit() {
             </div>
           </div>
         </section>
+      )}
+
+      {modalCreateRowIsOpen && (
+        <ModalCreateTaskQuestion
+          handleUpdateListing={handleUpdateListing}
+          modalCreateRowIsOpen={modalCreateRowIsOpen}
+          setModalCreateRowIsOpen={setModalCreateRowIsOpen}
+        />
       )}
     </div>
   )

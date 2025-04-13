@@ -3,10 +3,10 @@ import { motion } from 'framer-motion'
 import { AiFillDelete } from 'react-icons/ai'
 import { BadgeAction } from '../badge/BadgeAction'
 import { BadgeSimple } from '../badge/BadgeSimple'
-import { Eye, ListChecks } from 'lucide-react'
+import { ListChecks } from 'lucide-react'
 import { ExamResultInterface } from '../../interfaces/IExamResultInterface'
 import { routsNameMain } from '../../data/routsName'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { ExamInterface } from '../../interfaces/IExamInterface'
 import ExamViewModel from '../../services/ViewModel/ExamViewModel'
 import { showToast } from '../../utils/toasts'
@@ -102,10 +102,10 @@ export const TableRowResult: React.FC<TableRowProps> = ({
   return (
     <motion.tr className="border-b dark:border-gray-700 hover:bg-gray-100/40 dark:hover:bg-gray-700/40 transition-all duration-300 cursor-pointer">
       <td className="px-3 py-3 min-w-[6rem]">#{rowItem.id}</td>
-      <td className="px-3 py-3 min-w-[6rem] max-w-[20rem]">
+      <td className="px-3 py-3 min-w-[14rem] max-w-[20rem]">
         {rowExamData?.name}
       </td>
-      <td className="px-3 py-3 min-w-[6rem] max-w-[20rem]">
+      <td className="px-3 py-3 min-w-[12rem] max-w-[20rem]">
         {`${rowStudentData?.first_name} ${rowStudentData?.last_name}`}
       </td>
       <td className="px-3 py-3 min-w-[6rem] max-w-[20rem]">

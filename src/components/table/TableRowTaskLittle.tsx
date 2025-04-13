@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 
 // lib
-import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 // interfaces
 import { TaskInterface } from '../../interfaces/ITaskInterface'
@@ -11,8 +10,6 @@ interface TableRowProps {
 }
 
 export const TableRowTaskLittle: React.FC<TableRowProps> = ({ rowItem }) => {
-  const navigate = useNavigate()
-
   return (
     <motion.tr className="border-b dark:border-gray-700 hover:bg-gray-100/40 dark:hover:bg-gray-700/40 transition-all duration-300 cursor-pointer">
       <td className="px-3 py-3 min-w-[6rem] max-w-[20rem]">
@@ -24,18 +21,16 @@ export const TableRowTaskLittle: React.FC<TableRowProps> = ({ rowItem }) => {
               alt={rowItem.name}
             />
           </div>
-          <div className="flex flex-col justify-center items-start">
-            <span className="text-dark dark:text-light text-sm">
-              {rowItem.name}
-            </span>
-          </div>
+          <span className="text-dark dark:text-light text-sm whitespace-nowrap">
+            {rowItem.name}
+          </span>
         </div>
       </td>
       <td className="px-3 py-3 min-w-[6rem] max-w-[20rem]">
         {rowItem.task_type}
       </td>
       <td className="px-3 py-3 min-w-[6rem] max-w-[20rem]">{rowItem.mark}%</td>
-      <td className="px-3 py-3 min-w-[6rem] max-w-[20rem]">
+      <td className="px-3 py-3 min-w-[6rem] max-w-[20rem] whitespace-nowrap">
         {rowItem.due_date}
       </td>
     </motion.tr>

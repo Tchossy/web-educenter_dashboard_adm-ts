@@ -17,7 +17,7 @@ import { CustomInput } from '../../input/InputLabel'
 import { SelectCustomZod } from '../../selects/SelectCustomZod'
 import { AdminInterface } from '../../../interfaces/IAdmin'
 import { showToast } from '../../../utils/toasts'
-import uploadViewModel from '../../../services/ViewModel/uploadViewModel'
+import uploadViewModel from '../../../services/ViewModel/UploadViewModel'
 import AdminViewModel from '../../../services/ViewModel/AdminViewModel'
 
 type OptionType = {
@@ -93,8 +93,6 @@ export function ModalEditAdmin({
   handleUpdateListing,
   setModalEditRowIsOpen
 }: modalType) {
-  const [uploading, setUploading] = useState<boolean>(false)
-
   const [isSend, setIsSend] = useState<boolean>(false)
 
   // Image

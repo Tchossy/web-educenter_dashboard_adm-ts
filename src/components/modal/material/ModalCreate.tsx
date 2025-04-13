@@ -11,11 +11,11 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 
 // Services
-import uploadViewModel from '../../../services/ViewModel/uploadViewModel'
+import uploadViewModel from '../../../services/ViewModel/UploadViewModel'
 import MaterialViewModel from '../../../services/ViewModel/MaterialViewModel'
 
 // Data
-import { materialTypeOptions, statusOptions } from '../../../data/selectOption'
+import { materialTypeOptions } from '../../../data/selectOption'
 
 // Component
 import { CustomInput } from '../../input/InputLabel'
@@ -38,6 +38,7 @@ import ModuleViewModel from '../../../services/ViewModel/ModuleViewModel'
 import { ModuleInterface } from '../../../interfaces/IModuleInterface'
 import { OptionType } from '../../../types/option'
 import CourseViewModel from '../../../services/ViewModel/CourseViewModel'
+import { MaterialInterface } from '../../../interfaces/IMaterialInterface'
 
 const formSchema = z.object({
   name: z
@@ -82,9 +83,8 @@ export function ModalCreateMaterial({
   handleUpdateListing,
   modalCreateRowIsOpen,
   setModalCreateRowIsOpen
-}: modalCreateType) {
+}: modalCreateType<MaterialInterface>) {
   //  Loading
-  const [uploading, setUploading] = useState<boolean>(false)
   const [isSend, setIsSend] = useState<boolean>(false)
 
   const [typeMaterial, setTypeMaterial] = useState<'video' | 'pdf' | ''>('')
@@ -120,13 +120,13 @@ export function ModalCreateMaterial({
 
   // PDF
   const onPdfChange = (e: any) => {
-    const [file] = e.target.files
+    // const [file] = e.target.files
     const pdf = e.target.files[0]
     setSelectedPdfFile(pdf)
   }
   // PDF
   const onVideoChange = (e: any) => {
-    const [file] = e.target.files
+    // const [file] = e.target.files
     const video = e.target.files[0]
     setSelectedVideoFile(video)
   }
@@ -150,8 +150,6 @@ export function ModalCreateMaterial({
   }> {
     console.log('Uploading pdf...')
 
-    setUploading(true)
-
     const formData = new FormData()
     formData.append('pdfMaterial', selectedPdfFile)
 
@@ -173,8 +171,6 @@ export function ModalCreateMaterial({
     msgUpload: string
   }> {
     console.log('Uploading video...')
-
-    setUploading(true)
 
     const formData = new FormData()
     formData.append('videoMaterial', selectedVideoFile)

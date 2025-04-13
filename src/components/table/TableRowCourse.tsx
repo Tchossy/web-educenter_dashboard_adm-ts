@@ -36,13 +36,13 @@ const TableRowCourse: React.FC<TableRowProps> = ({
               alt={rowItem.name}
             />
           </div>
-          <div className="flex flex-col justify-center items-start">
-            <span>{rowItem.name}</span>
+          <div className="w-72 flex flex-col justify-center items-start">
+            <span className="flex-wrap">{rowItem.name}</span>
           </div>
         </div>
       </td>
-      <td className="px-3 py-3 min-w-[6rem] max-w-[20rem]">
-        <p>{rowItem.description}</p>
+      <td className="w-72 flex flex-col justify-center items-start relative overflow-hidden">
+        <p className="line-clamp-2">{rowItem.description}</p>
       </td>
       <td className="px-3 py-3 min-w-[6rem]">
         <BadgeSimple

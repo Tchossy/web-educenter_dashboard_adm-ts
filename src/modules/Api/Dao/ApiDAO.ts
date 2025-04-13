@@ -1,11 +1,13 @@
 import axios, { AxiosResponse } from 'axios'
-import { ApiEducenter } from '../api.educenter'
+import { ApiDFCenter } from '../api.dfcenter'
+// import { ApiDFCenter } from '../api.dfcenter'
 
 class ApiDAO {
   private baseUrl: string
 
   constructor() {
-    this.baseUrl = 'http://localhost:8000' // Defina a URL base da API
+    // this.baseUrl = 'http://localhost:8000' // Defina a URL base da API
+    this.baseUrl = ApiDFCenter // Defina a URL base da API
   }
 
   private async request<T>(

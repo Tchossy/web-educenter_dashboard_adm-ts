@@ -26,6 +26,7 @@ import ExportToExcel from '../../../components/ExportToExcel'
 import { ExamInterface } from '../../../interfaces/IExamInterface'
 import { showToast } from '../../../utils/toasts'
 import { Link } from 'react-router-dom'
+import { converter } from '../../../utils/converter'
 
 export function Exam() {
   // State
@@ -94,8 +95,10 @@ export function Exam() {
 
   // Get more data
   function fetchMoreData() {
-    const result = parseInt(docsPerPage) + parseInt(docsPerPage)
-    const str = result.toString()
+    const sumTotal =
+      converter.stringToNumber(docsPerPage) +
+      converter.stringToNumber(docsPerPage)
+    const str = converter.numberToString(sumTotal)
     fetchData(str)
   }
 
@@ -183,8 +186,8 @@ export function Exam() {
           {namePageUppercase}
         </h1>
 
-        <div className="w-full flex flex-row items-center justify-between gap-2 ">
-          <div className="flex flex-row items-center justify-between gap-4">
+        <div className="w-full flex flex-row max-w-s-960:flex-col items-center max-w-s-960:items-start justify-between gap-2 ">
+          <div className="flex flex-row max-w-s-640:flex-col items-center max-w-s-640:items-start justify-between gap-4">
             <Link
               to={routsNameMain.exam.create}
               className="py-2 px-4 rounded-lg bg-primary-200 text-white hover:bg-primary-500 active:bg-primary-700 flex flex-row items-center justify-center gap-4 transition-all duration-300 "
@@ -259,8 +262,8 @@ export function Exam() {
             <tbody>{rowsTable}</tbody>
           </table>
 
-          <div className="pt-4 flex flex-row justify-between items-center gap-1">
-            <p className="text-xs flex flex-row justify-start items-center gap-1">
+          <div className="pt-4 flex flex-row max-w-s-960:flex-col justify-between items-center max-w-s-960:items-start gap-1 max-w-s-960:gap-3">
+            <p className="text-xs flex flex-row justify-start items-center gap-1 whitespace-nowrap">
               Mostrando
               <strong className="text-dark dark:text-light font-semibold">
                 {rowsData?.length !== undefined ? '1' : '0'}
@@ -276,20 +279,23 @@ export function Exam() {
               {namePageUppercase}
             </p>
 
-            <div className="flex flex-row justify-center items-center gap-4 ">
-              <div className="flex flex-row justify-center items-center gap-4 ">
-                <span>Registos por página: </span>
-                <SelectCustom
-                  options={optionsRowPerPage}
-                  selectedValue={selectedValue}
-                  onChange={handleSelectChange}
-                />
+            <div className="flex flex-row justify-center items-center gap-4 mb-3 max-w-s-640:flex-wrap">
+              <div className="flex-1 flex flex-row justify-start items-center gap-4 max-w-s-520:flex-wrap">
+                <span className="">Registos por página: </span>
+
+                <span className="max-w-24">
+                  <SelectCustom
+                    options={optionsRowPerPage}
+                    selectedValue={selectedValue}
+                    onChange={handleSelectChange}
+                  />
+                </span>
               </div>
 
               <button
                 onClick={fetchMoreData}
                 type="submit"
-                className="sm:w-auto text-xs font-medium text-dark px-5 py-2.5 text-center flex flex-row justify-center items-center gap-2 bg-gray-50 rounded-lg  border border-gray-300 focus:ring-blue-500 focus:border-blue-500 w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-light dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                className="w-full sm:w-auto text-xs font-medium text-dark px-5 py-2.5 text-center flex flex-row justify-center items-center gap-2 bg-gray-50 rounded-lg  border border-gray-300 focus:ring-blue-500 focus:border-blue-500 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-light dark:focus:ring-blue-500 dark:focus:border-blue-500"
               >
                 <Plus size={16} /> Listar mais registos
               </button>

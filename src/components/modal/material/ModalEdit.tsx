@@ -13,7 +13,7 @@ import { z } from 'zod'
 import { CustomInput } from '../../input/InputLabel'
 
 // Data
-import { materialTypeOptions, statusOptions } from '../../../data/selectOption'
+import { materialTypeOptions } from '../../../data/selectOption'
 
 // Style
 import { customStylesModalCenter } from '../../../styles/custom/modals'
@@ -25,7 +25,7 @@ import { ModuleInterface } from '../../../interfaces/IModuleInterface'
 import CourseViewModel from '../../../services/ViewModel/CourseViewModel'
 import MaterialViewModel from '../../../services/ViewModel/MaterialViewModel'
 import ModuleViewModel from '../../../services/ViewModel/ModuleViewModel'
-import uploadViewModel from '../../../services/ViewModel/uploadViewModel'
+import uploadViewModel from '../../../services/ViewModel/UploadViewModel'
 import { OptionType } from '../../../types/option'
 import { showToast } from '../../../utils/toasts'
 import { MaterialInterface } from '../../../interfaces/IMaterialInterface'
@@ -68,7 +68,6 @@ export function ModalEditMaterial({
   setModalEditRowIsOpen
 }: modalEditeType<MaterialInterface>) {
   //  Loading
-  const [uploading, setUploading] = useState<boolean>(false)
   const [isSend, setIsSend] = useState<boolean>(false)
 
   const [typeMaterial, setTypeMaterial] = useState<'video' | 'pdf' | ''>(
@@ -117,13 +116,11 @@ export function ModalEditMaterial({
 
   // PDF
   const onPdfChange = (e: any) => {
-    const [file] = e.target.files
     const pdf = e.target.files[0]
     setSelectedPdfFile(pdf)
   }
-  // PDF
+  // Video
   const onVideoChange = (e: any) => {
-    const [file] = e.target.files
     const video = e.target.files[0]
     setSelectedVideoFile(video)
   }
@@ -147,8 +144,6 @@ export function ModalEditMaterial({
   }> {
     console.log('Uploading pdf...')
 
-    setUploading(true)
-
     const formData = new FormData()
     formData.append('pdfMaterial', selectedPdfFile)
 
@@ -170,8 +165,6 @@ export function ModalEditMaterial({
     msgUpload: string
   }> {
     console.log('Uploading video...')
-
-    setUploading(true)
 
     const formData = new FormData()
     formData.append('videoMaterial', selectedVideoFile)

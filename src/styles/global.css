@@ -30,7 +30,7 @@
 
 @layer base {
   body {
-    @apply leading-relaxed font-poppins bg-white text-baseText text-sm overflow-x-hidden;
+    @apply bg-baseBgLight dark:bg-baseBgDark leading-relaxed font-poppins text-sm overflow-x-hidden;
   }
 
   .container {

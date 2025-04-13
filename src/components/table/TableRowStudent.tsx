@@ -106,8 +106,8 @@ const TableRowStudent: React.FC<TableRowProps> = ({
       <td className="px-3 py-3 min-w-[6rem]">
         <p>{rowItem.phone}</p>
       </td>
-      <td className="px-3 py-3 min-w-[6rem]">{rowsCourseData?.name}</td>
-      <td className="px-3 py-3 min-w-[6rem]">{rowsModuleData?.name}</td>
+      <td className="px-3 py-3 min-w-[16rem]">{rowsCourseData?.name}</td>
+      <td className="px-3 py-3 min-w-[16rem]">{rowsModuleData?.name}</td>
       <td className="px-3 py-3 min-w-[6rem]">
         <BadgeSimple
           color={rowItem.status == 'active' ? 'blue' : 'red'}

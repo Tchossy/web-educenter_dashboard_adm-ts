@@ -1,18 +1,18 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 // interfaces
 import {
-  ExamAnswerInterface,
-  ExamAnswerMarkInterface
+  ExamAnswerInterface
+  // ExamAnswerMarkInterface
 } from '../../../../interfaces/IExamAnswerInterface'
 // components
 import { InputLabelSimple } from '../../../../components/input/InputLabelSimple'
 import { InputCheckbox } from '../../../../components/input/InputCheckbox'
 import { TextAreaLabelSimple } from '../../../../components/input/TextAreaLabelSimple'
-import { BeatLoader } from 'react-spinners'
-import ExamAnswerViewModel from '../../../../services/ViewModel/ExamAnswerViewModel'
+// import { BeatLoader } from 'react-spinners'
+// import ExamAnswerViewModel from '../../../../services/ViewModel/ExamAnswerViewModel'
 import { showToastBottom } from '../../../../utils/toasts'
 import { ToastContainer } from 'react-toastify'
-import { converter } from '../../../../utils/converter'
+// import { converter } from '../../../../utils/converter'
 import { ExamQuestionInterface } from '../../../../interfaces/IExamQuestionInterface'
 import ExamQuestionViewModel from '../../../../services/ViewModel/ExamQuestionViewModel'
 
@@ -22,7 +22,7 @@ interface Props {
 }
 
 export function ExamAnswers({ examAnswersData, onAnswersUpdate }: Props) {
-  const [isSending, setIsSending] = useState<{ [key: string]: boolean }>({})
+  // const [isSending, setIsSending] = useState<{ [key: string]: boolean }>({})
 
   const [examQuestionsData, setExamQuestionsData] = useState<{
     [key: string]: ExamQuestionInterface
@@ -67,51 +67,51 @@ export function ExamAnswers({ examAnswersData, onAnswersUpdate }: Props) {
   }
 
   // Função chamada ao clicar no botão salvar
-  const handleSave = async (answer: ExamAnswerInterface) => {
-    setIsSending(prev => ({ ...prev, [answer.id as string]: true }))
+  // const handleSave = async (answer: ExamAnswerInterface) => {
+  //   setIsSending(prev => ({ ...prev, [answer.id as string]: true }))
 
-    const maxMarkNumber = examQuestionsData[answer.question_id]?.value || 100
+  //   const maxMarkNumber = examQuestionsData[answer.question_id]?.value || 100
 
-    const markValue = converter.stringToNumber(answer.mark)
+  //   const markValue = converter.stringToNumber(answer.mark)
 
-    if (markValue < 0) {
-      showToastBottom('error', 'A cotação não pode ser inferior a zero')
-      setIsSending(prev => ({ ...prev, [answer.id as string]: false }))
-    } else if (markValue > converter.stringToNumber(maxMarkNumber as string)) {
-      showToastBottom(
-        'error',
-        `A cotação não pode ser superior a ${maxMarkNumber}`
-      )
-      setIsSending(prev => ({ ...prev, [answer.id as string]: false }))
-    } else if (markValue > 100) {
-      showToastBottom('error', 'A cotação não pode ser superior a 100')
-      setIsSending(prev => ({ ...prev, [answer.id as string]: false }))
-    } else {
-      const dataToSave: ExamAnswerMarkInterface = {
-        exam_id: answer.exam_id as string,
-        student_id: answer.student_id as string,
-        question_id: answer.question_id as string,
-        is_correct: answer.is_correct as boolean,
-        mark: answer.mark
-      }
+  //   if (markValue < 0) {
+  //     showToastBottom('error', 'A cotação não pode ser inferior a zero')
+  //     setIsSending(prev => ({ ...prev, [answer.id as string]: false }))
+  //   } else if (markValue > converter.stringToNumber(maxMarkNumber as string)) {
+  //     showToastBottom(
+  //       'error',
+  //       `A cotação não pode ser superior a ${maxMarkNumber}`
+  //     )
+  //     setIsSending(prev => ({ ...prev, [answer.id as string]: false }))
+  //   } else if (markValue > 100) {
+  //     showToastBottom('error', 'A cotação não pode ser superior a 100')
+  //     setIsSending(prev => ({ ...prev, [answer.id as string]: false }))
+  //   } else {
+  //     const dataToSave: ExamAnswerMarkInterface = {
+  //       exam_id: answer.exam_id as string,
+  //       student_id: answer.student_id as string,
+  //       question_id: answer.question_id as string,
+  //       is_correct: answer.is_correct as boolean,
+  //       mark: answer.mark
+  //     }
 
-      const resultSubmit = await ExamAnswerViewModel.update(
-        answer.id as string,
-        dataToSave
-      )
+  //     const resultSubmit = await ExamAnswerViewModel.update(
+  //       answer.id as string,
+  //       dataToSave
+  //     )
 
-      if (resultSubmit.error) {
-        showToastBottom('error', resultSubmit.msg)
-        setIsSending(prev => ({ ...prev, [answer.id as string]: false }))
-      } else {
-        showToastBottom('success', 'Nota atribuida com sucesso')
+  //     if (resultSubmit.error) {
+  //       showToastBottom('error', resultSubmit.msg)
+  //       setIsSending(prev => ({ ...prev, [answer.id as string]: false }))
+  //     } else {
+  //       showToastBottom('success', 'Nota atribuida com sucesso')
 
-        setTimeout(() => {
-          setIsSending(prev => ({ ...prev, [answer.id as string]: false }))
-        }, 2000)
-      }
-    }
-  }
+  //       setTimeout(() => {
+  //         setIsSending(prev => ({ ...prev, [answer.id as string]: false }))
+  //       }, 2000)
+  //     }
+  //   }
+  // }
 
   // Exam
   async function fetchExamData() {
@@ -146,49 +146,47 @@ export function ExamAnswers({ examAnswersData, onAnswersUpdate }: Props) {
       <ToastContainer />
       {updatedAnswers.map((answer, answerIndex) => {
         const currentIndex = answerIndex + 1
-        const questionType =
-          examQuestionsData[answer?.question_id as string]?.question_type
-        const isMultiChoice = questionType === 'multiple_choice'
+        // const questionType =
+        //   examQuestionsData[answer?.question_id as string]?.question_type
+        // const isMultiChoice = questionType === 'multiple_choice'
 
         return (
           <div
             key={answer?.id}
-            className="w-full my-4 flex flex-1 flex-row gap-3"
+            className={`w-full my-8 flex flex-1 flex-row max-w-s-740:flex-col gap-3 border rounded-lg p-4 ${
+              answer.is_correct ? 'border-green-400' : 'border-red-400'
+            }`}
           >
-            <div className="flex flex-1">
+            <div className="min-w-44 flex flex-1">
               <TextAreaLabelSimple
                 isDisabled={true}
                 htmlFor={`answer_${answer?.id}`}
                 label={`Questão ${currentIndex}: ${answer.question_title}`}
-                value={`Resposta: ${answer.answer}`}
+                value={`Resposta do estudante: ${answer.answer}`}
                 onChange={() => null}
               />
             </div>
 
-            <div className="flex flex-row gap-3 items-end">
-              {isMultiChoice && (
-                <div className="">
-                  <InputCheckbox
-                    htmlFor="is_valid"
-                    isDisabled={isMultiChoice}
-                    label="Correta"
-                    value={answer.is_correct}
-                    onChange={isChecked =>
-                      handleChange(
-                        answer?.id as string,
-                        'is_correct',
-                        isChecked
-                      )
-                    }
-                  />
-                </div>
-              )}
+            <div className="flex flex-row gap-3 items-end flex-wrap">
+              {/* {isMultiChoice && ( */}
+              <div className="">
+                <InputCheckbox
+                  htmlFor="is_valid"
+                  isDisabled={true}
+                  label="Correta"
+                  value={answer.is_correct}
+                  onChange={isChecked =>
+                    handleChange(answer?.id as string, 'is_correct', isChecked)
+                  }
+                />
+              </div>
+              {/* )} */}
 
-              <div className="w-full max-w-[6rem]">
+              <div className="w-full max-w-[5rem]">
                 <InputLabelSimple
                   type="number"
                   htmlFor="mark"
-                  isDisabled={isMultiChoice}
+                  isDisabled={true}
                   label={`Cotação`}
                   value={answer.mark}
                   onChange={e =>
@@ -202,6 +200,7 @@ export function ExamAnswers({ examAnswersData, onAnswersUpdate }: Props) {
                 />
               </div>
 
+              {/* 
               {!isMultiChoice && (
                 <button
                   disabled={isSending[answer?.id as string]}
@@ -216,7 +215,8 @@ export function ExamAnswers({ examAnswersData, onAnswersUpdate }: Props) {
 
                   {!isSending[answer?.id as string] && <span>Salvar</span>}
                 </button>
-              )}
+              )} 
+               */}
             </div>
           </div>
         )

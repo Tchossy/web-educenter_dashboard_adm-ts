@@ -6,26 +6,25 @@ import { MdOutlinePlaylistAdd } from 'react-icons/md'
 import { BeatLoader } from 'react-spinners'
 
 // Form
-import { useFieldArray, useForm } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 
 // Services
-import uploadViewModel from '../../../services/ViewModel/uploadViewModel'
+import uploadViewModel from '../../../services/ViewModel/UploadViewModel'
 import ExamViewModel from '../../../services/ViewModel/ExamViewModel'
 import CourseViewModel from '../../../services/ViewModel/CourseViewModel'
 import ModuleViewModel from '../../../services/ViewModel/ModuleViewModel'
 
 // Data
 import { routsNameMain } from '../../../data/routsName'
-import { statusExamOptions, statusOptions } from '../../../data/selectOption'
+import { statusExamOptions } from '../../../data/selectOption'
 
 // Component
 import { CustomInput } from '../../../components/input/InputLabel'
 import { TextAreaLabel } from '../../../components/input/TextAreaLabelZod'
 import { SelectCustomZod } from '../../../components/selects/SelectCustomZod'
 import { Breadcrumbs } from '../../../components/Breadcrumbs'
-import { QuestionInput } from './components/QuestionInput'
 
 // Interfaces
 import { ExamInterface } from '../../../interfaces/IExamInterface'
@@ -122,8 +121,6 @@ export function ExamEdit() {
 
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [isSending, setIsSending] = useState<boolean>(false)
-  const [isSendingQuestion, setIsSendingQuestion] = useState<boolean>(false)
-  const [uploading, setUploading] = useState<boolean>(false)
 
   const [rowsCourseData, setRowsCourseData] = useState<OptionType[]>([])
   const [rowsModuleData, setRowsModuleData] = useState<OptionType[]>([])
@@ -234,8 +231,6 @@ export function ExamEdit() {
     msgUpload: string
   }> {
     console.log('Uploading...')
-
-    setUploading(true)
 
     const formData = new FormData()
     formData.append('imageTask', selectedImageFile)
@@ -623,7 +618,6 @@ export function ExamEdit() {
                       index={index + 1}
                       exam_id={examId as string}
                       baseInfo={question}
-                      handleUpdateListing={fetchExamQuestionData}
                       handleDeleteRow={handleDeleteRow}
                     />
                   )

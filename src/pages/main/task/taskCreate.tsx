@@ -1,29 +1,32 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 // Lib
 import { ToastContainer } from 'react-toastify'
+import { MdOutlinePlaylistAdd } from 'react-icons/md'
 import { BeatLoader } from 'react-spinners'
 
 // Form
-import { useForm } from 'react-hook-form'
+import { useFieldArray, useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 
 // Services
-import uploadViewModel from '../../../services/ViewModel/uploadViewModel'
+import uploadViewModel from '../../../services/ViewModel/UploadViewModel'
 import TaskViewModel from '../../../services/ViewModel/TaskViewModel'
 import CourseViewModel from '../../../services/ViewModel/CourseViewModel'
 import ModuleViewModel from '../../../services/ViewModel/ModuleViewModel'
 
 // Data
-import { statusTaskOptions, typeTaskOptions } from '../../../data/selectOption'
 import { routsNameMain } from '../../../data/routsName'
+import { statusTaskOptions } from '../../../data/selectOption'
 
 // Component
 import { CustomInput } from '../../../components/input/InputLabel'
 import { TextAreaLabel } from '../../../components/input/TextAreaLabelZod'
 import { SelectCustomZod } from '../../../components/selects/SelectCustomZod'
 import { Breadcrumbs } from '../../../components/Breadcrumbs'
+import { QuestionInput } from './components/QuestionInput'
 
 // Interfaces
 import { TaskInterface } from '../../../interfaces/ITaskInterface'
@@ -35,7 +38,8 @@ import { CourseInterface } from '../../../interfaces/ICourseInterface'
 import { ModuleInterface } from '../../../interfaces/IModuleInterface'
 // Types
 import { OptionType } from '../../../types/option'
-import { TaskType } from '../../../types/enum'
+import { TaskQuestionInterface } from '../../../interfaces/ITaskQuestionInterface'
+import TaskQuestionViewModel from '../../../services/ViewModel/TaskQuestionViewModel'
 
 const formSchema = z.object({
   name: z
@@ -68,15 +72,7 @@ const formSchema = z.object({
     .string({
       required_error: 'A nota total é obrigatória (em %)'
     })
-    .min(1, 'O valor do exame tem que ser maior de 1'),
-  task_type: z.string().refine(
-    value => {
-      return value === 'online' || value === 'upload'
-    },
-    {
-      message: 'Por favor, selecione uma opção válida'
-    }
-  ),
+    .min(1, 'O valor do tarefa tem que ser maior de 1'),
   due_date: z.string().refine(
     value => {
       return value != ''
@@ -93,16 +89,66 @@ const formSchema = z.object({
       message:
         "Por favor, selecione uma opção válida: 'Aberto', 'Fechado ou 'Pendente'"
     }
-  )
+  ),
+  questions: z
+    .array(
+      z.object({
+        question: z.string({
+          required_error: 'A questão é obrigatória'
+        }),
+        value: z
+          .string({
+            required_error: 'O valor é obrigatória'
+          })
+          .min(1, 'O valor deve ser no mínimo 1'),
+        question_type: z.string().refine(
+          value => {
+            return (
+              value === 'short_answer' ||
+              value === 'multiple_choice' ||
+              value === 'image_upload'
+            )
+          },
+          {
+            message:
+              "Por favor, selecione uma opção válida: 'Resposta curta', 'Múltipla escolha' ou 'Upload de imagem'"
+          }
+        ),
+        question_answer: z
+          .string({
+            required_error: 'A questão é obrigatória'
+          })
+          .optional(),
+        question_image: z.instanceof(File).optional().or(z.string().optional()),
+        options: z
+          .array(
+            z.object({
+              text: z.string({
+                required_error: 'O texto da opção é obrigatório'
+              }),
+              is_valid: z.boolean()
+            })
+          )
+          .optional()
+        // image: z.string().optional()
+      })
+    )
+    .optional()
 })
 type formType = z.infer<typeof formSchema>
 
 export function TaskCreate() {
-  // State
-  const [isSend, setIsSend] = useState<boolean>(false)
-  const [uploading, setUploading] = useState<boolean>(false)
+  const navigate = useNavigate()
 
-  const [taskType, setTaskType] = useState<TaskType>('online')
+  const handleNavigation = (page: string) => {
+    navigate(page) // Navega para a página "/about"
+  }
+
+  // State
+  const [isCreated, setIsCreated] = useState<boolean>(false)
+  const [isTaskId, setIsTaskId] = useState<string | null>(null)
+
+  const [isSend, setIsSend] = useState<boolean>(false)
 
   const [rowsCourseData, setRowsCourseData] = useState<OptionType[]>([])
   const [rowsModuleData, setRowsModuleData] = useState<OptionType[]>([])
@@ -112,11 +158,7 @@ export function TaskCreate() {
   const [urlImageUploaded, setUrlImageUploaded] = useState<string | null>(null)
   const [imageSelect, setImageSelect] = useState<string>('')
 
-  // Pdf
-  const [selectedPdfFile, setSelectedPdfFile] = useState<string>('')
-  const [urlPdfUploaded, setUrlPdfUploaded] = useState<string | null>(null)
-
-  // Const
+  // const
   const namePageEntry = 'Criar tarefa'
   const namePageUppercase = 'Tarefas'
 
@@ -129,13 +171,39 @@ export function TaskCreate() {
 
   // Form Zod
   const {
-    control,
     reset,
+    control,
     handleSubmit,
     formState: { errors }
   } = useForm<formType>({
     resolver: zodResolver(formSchema)
   })
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: 'questions'
+  })
+
+  const watchedValues = useWatch({
+    control,
+    name: 'questions'
+  })
+
+  const totalMark =
+    watchedValues?.reduce((acc, question) => {
+      const val = Number(question?.value)
+      return acc + (isNaN(val) ? 0 : val)
+    }, 0) || 0
+
+  const addQuestion = () => {
+    append({
+      question: '',
+      value: '1',
+      question_type: 'short_answer',
+      question_answer: '',
+      options: []
+      // image: ''
+    })
+  }
 
   // OnChange
   const onImageChange = (e: any) => {
@@ -143,16 +211,6 @@ export function TaskCreate() {
     const photo = e.target.files[0]
     setSelectedImageFile(photo)
     setImageSelect(URL.createObjectURL(file))
-  }
-
-  const onTaskPdfChange = (e: any) => {
-    const [file] = e.target.files
-    const pdf = e.target.files[0]
-    setSelectedPdfFile(pdf)
-  }
-
-  const handleTaskTypeChange = (value: any) => {
-    setTaskType(value)
   }
 
   // Handle Select
@@ -173,9 +231,7 @@ export function TaskCreate() {
     urlImage: string
     msgUpload: string
   }> {
-    console.log('Uploading...')
-
-    setUploading(true)
+    // console.log('Uploading...')
 
     const formData = new FormData()
     formData.append('imageTask', selectedImageFile)
@@ -194,29 +250,26 @@ export function TaskCreate() {
     }
   }
 
-  // Function Upload
-  async function handleUploadPdf(): Promise<{
-    urlTaskInstruction: string
-    msgUpload: string
+  async function handleUploadQuestionImage(file: any): Promise<{
+    urlQuestionImage: string
+    msgQuestionUpload: string
   }> {
-    console.log('Uploading pdf...')
-
-    setUploading(true)
+    console.log('Uploading Question...')
 
     const formData = new FormData()
-    formData.append('pdfTaskInstruction', selectedPdfFile)
+    formData.append('imageQuestion', file)
 
-    const result = await uploadViewModel.uploadTaskInstructionPdf(formData)
+    const result = await uploadViewModel.uploadQuestionImage(formData)
 
     if (result.error) {
       throw new Error(result.msg)
     }
 
-    const urlTaskInstruction = result.url as string
-    const msgUpload = result.msg as string
+    const urlQuestionImage = result.url as string
+    const msgQuestionUpload = result.msg as string
     return {
-      urlTaskInstruction,
-      msgUpload
+      urlQuestionImage,
+      msgQuestionUpload
     }
   }
 
@@ -225,7 +278,6 @@ export function TaskCreate() {
     setIsSend(true)
 
     try {
-      let urlPdfToSave = urlPdfUploaded ? urlPdfUploaded : ''
       let urlImageToSave = urlImageUploaded ? urlImageUploaded : ''
 
       if (!urlImageUploaded) {
@@ -243,44 +295,162 @@ export function TaskCreate() {
         }
       }
 
-      if (selectedPdfFile) {
-        if (!urlPdfUploaded) {
-          const resUrl = await handleUploadPdf()
-
-          const { urlTaskInstruction, msgUpload } = resUrl
-          urlPdfToSave = urlTaskInstruction
-
-          setUrlPdfUploaded(urlTaskInstruction)
-
-          if (!urlTaskInstruction) {
-            showToastBottom('error', msgUpload)
-            setIsSend(false)
-            return
-          }
-        }
-      }
-
       const dataToSave: TaskInterface = {
         ...dataForm,
-        image: urlImageToSave,
-        file_url: urlPdfToSave
+        image: urlImageToSave
       }
 
-      const resultSubmit = await TaskViewModel.create(dataToSave)
+      if (!isCreated) {
+        const resultSubmit = await TaskViewModel.create(dataToSave)
 
-      if (resultSubmit.error) {
-        showToastBottom('error', resultSubmit.msg)
-        setIsSend(false)
-      } else {
-        showToastBottom('success', resultSubmit.msg)
-        setTimeout(() => {
-          reset()
-          setSelectedImageFile('')
-          setUrlImageUploaded(null)
-          setImageSelect('')
+        if (resultSubmit.error) {
+          showToastBottom('error', resultSubmit.msg)
+          setIsSend(false)
+        } else {
+          // showToastBottom('success', resultSubmit.msg)
+          // console.log('Success', resultSubmit.msg)
 
           setIsSend(false)
-        }, 3000)
+          setIsCreated(true)
+          setIsTaskId(resultSubmit.data?.id as string)
+
+          if (dataForm.questions.length !== 0) {
+            dataForm.questions.forEach(
+              async (question: any, questionIndex: number) => {
+                // Upload Question image
+                // try {}
+                let urlQuestionImageToSave = ''
+
+                if (question.question_image) {
+                  const resQuestionUpload = await handleUploadQuestionImage(
+                    question.question_image
+                  )
+
+                  const { urlQuestionImage, msgQuestionUpload } =
+                    resQuestionUpload
+                  urlQuestionImageToSave = urlQuestionImage
+
+                  if (!urlQuestionImage) {
+                    showToastBottom(
+                      'error',
+                      `Pergunta ${questionIndex + 1} - ${msgQuestionUpload}`
+                    )
+                    setIsSend(false)
+                    return
+                  }
+                }
+
+                // Converte o array em uma string JSON
+                const optionsString = JSON.stringify(question.options)
+
+                const questionToSave: TaskQuestionInterface = {
+                  task_id: resultSubmit.data?.id as string,
+                  question_text: question.question,
+                  question_type: question.question_type,
+                  question_answer: question.question_answer,
+                  question_image: urlQuestionImageToSave,
+
+                  options: optionsString as any,
+                  value: question.value
+                }
+
+                const resultQuestionSubmit = await TaskQuestionViewModel.create(
+                  questionToSave
+                )
+
+                if (resultQuestionSubmit.error) {
+                  showToastBottom('error', resultQuestionSubmit.msg)
+                  setIsSend(false)
+                } else {
+                  setTimeout(() => {
+                    reset()
+                    handleNavigation(routsNameMain.task.index)
+                    setSelectedImageFile('')
+                    setUrlImageUploaded(null)
+                    setImageSelect('')
+                    setIsSend(false)
+                  }, 3000)
+                }
+
+                // console.log(questionToSave)
+              }
+            )
+          } else {
+            showToastBottom(
+              'error',
+              'Por favor crie as perguntas para a tarefa'
+            )
+          }
+        }
+      } else {
+        // alert('Esse tarefa já foi criado')
+
+        if (!isTaskId) {
+          showToastBottom('error', 'Não foi possivel identificar a tarefa')
+          alert(isTaskId)
+          setIsSend(false)
+          return
+        }
+        if (dataForm.questions.length !== 0) {
+          let urlImageToSave = urlImageUploaded ? urlImageUploaded : ''
+
+          if (!urlImageUploaded) {
+            const resUrl = await handleUploadImage()
+
+            const { urlImage, msgUpload } = resUrl
+            urlImageToSave = urlImage
+
+            setUrlImageUploaded(urlImage)
+
+            if (!urlImage) {
+              showToastBottom('error', msgUpload)
+              setIsSend(false)
+              return
+            }
+          }
+
+          dataForm.questions.forEach(async (question: any) => {
+            // Converte o array em uma string JSON
+            const optionsString = JSON.stringify(question.options)
+
+            const questionToSave: TaskQuestionInterface = {
+              task_id: isTaskId as string,
+              question_text: question.question,
+              question_type: question.question_type,
+              question_answer: question.question_answer,
+              question_image: urlImageToSave,
+              options: optionsString as any,
+              value: question.value
+            }
+
+            const resultQuestionSubmit = await TaskQuestionViewModel.create(
+              questionToSave
+            )
+
+            if (resultQuestionSubmit.error) {
+              showToastBottom('error', resultQuestionSubmit.msg)
+              setIsSend(false)
+            } else {
+              showToastBottom('success', resultQuestionSubmit.msg)
+            }
+            // console.log(questionToSave)
+          })
+
+          setTimeout(() => {
+            reset()
+            handleNavigation(routsNameMain.task.index)
+            setSelectedImageFile('')
+            setUrlImageUploaded(null)
+            setImageSelect('')
+            setIsCreated(false)
+            setIsTaskId(null)
+            setIsSend(false)
+          }, 3000)
+        } else {
+          showToastBottom('error', 'Por favor crie as perguntas para a tarefa')
+          // alert('Por favor crie as perguntas para a tarefa')
+        }
+        setIsSend(false)
       }
     } catch (error) {
       showToastBottom('error', String(error) as string)
@@ -343,11 +513,20 @@ export function TaskCreate() {
     <div className="w-full h-full flex flex-col justify-start items-start gap-6">
       <ToastContainer />
 
+      {/* Float Counter */}
+      <div className="z-50 w-[16rem] flex flex-col justify-center items-center fixed top-24 right-6 py-4 px-6 rounded-md border-1 bg-dark shadow-4xl">
+        <span className="font-light text-xl text-white">Pontuação total: </span>
+
+        <span className="font-semibold text-2xl text-primary-200">
+          <h1>{totalMark}</h1>
+        </span>
+      </div>
+
       <div className="w-full flex flex-row items-center justify-between gap-2 ">
         <div className="w-full flex flex-col items-start justify-between gap-4">
           <Breadcrumbs items={itemsBreadcrumbs} />
           <h1 className="text-2xl font-bold text-dark dark:text-light ">
-            {namePageEntry}
+            {namePageEntry} {isTaskId && `/ ${isTaskId}`}
           </h1>
         </div>
       </div>
@@ -360,7 +539,7 @@ export function TaskCreate() {
           >
             <div className="w-full flex flex-col items-start justify-start">
               <label className="block mb-2 text-sm font-medium dark:text-light text-gray-600">
-                Imagem do tarefa
+                Imagem da tarefa
               </label>
               <div className="w-full max-w-[14rem] flex items-start justify-start ">
                 <label
@@ -404,7 +583,6 @@ export function TaskCreate() {
                   <input
                     id="dropzone-file"
                     type="file"
-                    disabled={isSend}
                     className="hidden"
                     onChange={onImageChange}
                   />
@@ -416,8 +594,7 @@ export function TaskCreate() {
               <CustomInput
                 type="text"
                 htmlFor="name"
-                label="Titulo do tarefa"
-                isDisabled={isSend}
+                label="Titulo da tarefa"
                 placeholder="Ex.: Desenvolvimento Web"
                 control={control}
                 error={errors.name}
@@ -428,7 +605,6 @@ export function TaskCreate() {
               <TextAreaLabel
                 htmlFor="description"
                 label="Descrição"
-                isDisabled={isSend}
                 placeholder="Ex.: Curso completo de Desenvolvimento Web com foco em HTML, CSS, JavaScript e frameworks modernos."
                 control={control}
                 error={errors.description}
@@ -439,7 +615,6 @@ export function TaskCreate() {
               <SelectCustomZod
                 name="course_id"
                 label="Curso"
-                isDisabled={isSend}
                 control={control}
                 error={errors.course_id}
                 options={rowsCourseData}
@@ -448,7 +623,6 @@ export function TaskCreate() {
               <SelectCustomZod
                 name="module_id"
                 label="Modulo"
-                isDisabled={isSend}
                 control={control}
                 error={errors.module_id}
                 options={rowsModuleData}
@@ -457,15 +631,14 @@ export function TaskCreate() {
               <CustomInput
                 type="number"
                 htmlFor="mark"
-                label="Valor do exame"
-                isDisabled={isSend}
+                label="Valor da tarefa"
                 placeholder="Ex.: 100"
                 control={control}
                 error={errors.mark}
               />
             </div>
 
-            <div className="w-full grid gap-6 md:grid-cols-3">
+            <div className="w-full grid gap-6 md:grid-cols-4">
               <SelectCustomZod
                 name="status"
                 label="Estado"
@@ -484,37 +657,35 @@ export function TaskCreate() {
                 control={control}
                 error={errors.due_date}
               />
-
-              <SelectCustomZod
-                name="task_type"
-                label="Tipo de tarefa"
-                isDisabled={isSend}
-                control={control}
-                error={errors.task_type}
-                options={typeTaskOptions}
-                onOptionChange={handleTaskTypeChange}
-              />
-
-              <div className="flex flex-col gap-2">
-                <label className="block text-sm font-medium dark:text-light text-gray-600">
-                  Upload das instruções (PDF)
-                </label>
-                <input
-                  disabled={isSend}
-                  id="dropzone-file"
-                  type="file"
-                  accept="application/pdf"
-                  className={`w-full border dark:bg-gray-700/60 bg-gray-100/10  dark:border-gray-500/60 border-gray-300/60 dark:text-gray-300 text-gray-500 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block`}
-                  onChange={onTaskPdfChange}
-                />
-              </div>
             </div>
+
+            {/* Star Task Question */}
+            <div className="w-full flex flex-col gap-4">
+              <h3 className="text-xl font-semibold">Perguntas da tarefa</h3>
+              {fields.map((field, index) => (
+                <QuestionInput
+                  key={field.id}
+                  control={control}
+                  index={index}
+                  removeQuestion={remove}
+                />
+              ))}
+              <button
+                type="button"
+                onClick={addQuestion}
+                className="h-[2.6rem] max-w-[14rem] px-6 py-2 rounded-lg bg-green-500 text-white hover:bg-green-600 active:bg-green-900 flex flex-row items-center justify-center gap-2 transition-all duration-300"
+              >
+                <MdOutlinePlaylistAdd className="text-2xl" />
+                Adicionar Pergunta
+              </button>
+            </div>
+            {/* End Task Question */}
 
             <div className="w-full">
               <button
-                type="submit"
                 disabled={isSend}
-                className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-2 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                type="submit"
+                className="h-[2.6rem] max-w-[14rem] px-6 rounded-lg bg-primary-200 text-white hover:bg-primary-500 active:bg-primary-700 flex flex-row items-center justify-center gap-2 transition-all duration-300 "
               >
                 {isSend && (
                   <>

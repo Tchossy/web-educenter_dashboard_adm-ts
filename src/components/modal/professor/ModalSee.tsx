@@ -1,5 +1,3 @@
-import { useState } from 'react'
-
 // Lib
 import Modal from 'react-modal'
 import { X } from 'lucide-react'

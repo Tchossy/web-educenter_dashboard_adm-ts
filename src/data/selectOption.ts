@@ -23,8 +23,8 @@ export const materialTypeOptions: OptionType[] = [
 ]
 export const questionTypeOptions: OptionType[] = [
   { value: 'short_answer', label: 'Resposta Curta' },
-  { value: 'multiple_choice', label: 'Múltipla Escolha' }
-  // { value: 'image_upload', label: 'Upload de Imagem' }
+  { value: 'multiple_choice', label: 'Múltipla Escolha' },
+  { value: 'image_upload', label: 'Upload de Imagem' }
 ]
 export const trueFalseOptions: OptionType[] = [
   { value: 'true', label: 'Sim' },

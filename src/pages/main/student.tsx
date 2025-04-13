@@ -5,7 +5,7 @@ import swal from 'sweetalert'
 import { IoSearchSharp } from 'react-icons/io5'
 
 // Icon
-import { FileDown, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
 
 // Data
 import { routsNameMain } from '../../data/routsName'
@@ -30,7 +30,7 @@ import { ModalSeeStudent } from '../../components/modal/student/ModalSee'
 // Interface
 import { StudentInterface } from '../../interfaces/IStudentInterface'
 import { showToast } from '../../utils/toasts'
-import { studentData } from '../../data/tableData'
+import { converter } from '../../utils/converter'
 
 export function Student() {
   // State
@@ -108,7 +108,11 @@ export function Student() {
 
   // Get more data
   function fetchMoreData() {
-    fetchData(docsPerPage + docsPerPage)
+    const sumTotal =
+      converter.stringToNumber(docsPerPage) +
+      converter.stringToNumber(docsPerPage)
+    const str = converter.numberToString(sumTotal)
+    fetchData(str)
   }
 
   // Search data
@@ -163,6 +167,7 @@ export function Student() {
 
   // Change rows per page
   const handleSelectChange = (value: string) => {
+    setSelectedValue(value)
     setDocsPerPage(value)
     fetchData(value)
   }
@@ -172,7 +177,7 @@ export function Student() {
     setRowSelect(item)
     setModalEditRowIsOpen(true)
   }
-  function openModalCreateRow(item: any) {
+  function openModalCreateRow() {
     setModalCreateRowIsOpen(true)
   }
   function openModalSeeRow(item: any) {
@@ -209,8 +214,8 @@ export function Student() {
           {namePageUppercase}
         </h1>
 
-        <div className="w-full flex flex-row items-center justify-between gap-2 ">
-          <div className="flex flex-row items-center justify-between gap-4">
+        <div className="w-full flex flex-row max-w-s-960:flex-col items-center max-w-s-960:items-start justify-between gap-2 ">
+          <div className="flex flex-row max-w-s-640:flex-col items-center max-w-s-640:items-start justify-between gap-4">
             <button
               onClick={openModalCreateRow}
               className="py-2 px-4 rounded-lg bg-primary-200 text-white hover:bg-primary-500 active:bg-primary-700 flex flex-row items-center justify-center gap-4 transition-all duration-300 "
@@ -221,9 +226,9 @@ export function Student() {
 
             <ExportToExcel
               data={dataToExport}
-              filename="material_data"
-              sheetName="Material"
-              titlePage="Lista de materiais"
+              filename="admin_data"
+              sheetName="Admin"
+              titlePage="Lista de admins"
               imageSrc="http://localhost:5173/logo.png"
               orientation="landscape"
               scale={0.8}
@@ -234,6 +239,7 @@ export function Student() {
             <InputWithButton
               onChange={e => setTermForSearch(e.target.value)}
               placeholder="Digite algo"
+              // buttonText="Enviar"
               icon={<IoSearchSharp size={20} />}
               onButtonClick={searchDocs}
             />
@@ -284,8 +290,8 @@ export function Student() {
             <tbody>{rowsTable}</tbody>
           </table>
 
-          <div className="pt-4 flex flex-row justify-between items-center gap-1">
-            <p className="text-xs flex flex-row justify-start items-center gap-1">
+          <div className="pt-4 flex flex-row max-w-s-960:flex-col justify-between items-center max-w-s-960:items-start gap-1 max-w-s-960:gap-3">
+            <p className="text-xs flex flex-row justify-start items-center gap-1 whitespace-nowrap">
               Mostrando
               <strong className="text-dark dark:text-light font-semibold">
                 {rowsData?.length !== undefined ? '1' : '0'}
@@ -301,20 +307,23 @@ export function Student() {
               {namePageUppercase}
             </p>
 
-            <div className="flex flex-row justify-center items-center gap-4 ">
-              <div className="flex flex-row justify-center items-center gap-4 ">
-                <span>Registos por página: </span>
-                <SelectCustom
-                  options={optionsRowPerPage}
-                  selectedValue={selectedValue}
-                  onChange={handleSelectChange}
-                />
+            <div className="flex flex-row justify-center items-center gap-4 mb-3 max-w-s-640:flex-wrap">
+              <div className="flex-1 flex flex-row justify-start items-center gap-4 max-w-s-520:flex-wrap">
+                <span className="">Registos por página: </span>
+
+                <span className="max-w-24">
+                  <SelectCustom
+                    options={optionsRowPerPage}
+                    selectedValue={selectedValue}
+                    onChange={handleSelectChange}
+                  />
+                </span>
               </div>
 
               <button
                 onClick={fetchMoreData}
                 type="submit"
-                className="sm:w-auto text-xs font-medium text-dark px-5 py-2.5 text-center flex flex-row justify-center items-center gap-2 bg-gray-50 rounded-lg  border border-gray-300 focus:ring-blue-500 focus:border-blue-500 w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-light dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                className="w-full sm:w-auto text-xs font-medium text-dark px-5 py-2.5 text-center flex flex-row justify-center items-center gap-2 bg-gray-50 rounded-lg  border border-gray-300 focus:ring-blue-500 focus:border-blue-500 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-light dark:focus:ring-blue-500 dark:focus:border-blue-500"
               >
                 <Plus size={16} /> Listar mais registos
               </button>

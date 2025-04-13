@@ -2,7 +2,6 @@ import React from 'react'
 import ExcelJS from 'exceljs'
 import { saveAs } from 'file-saver'
 import { BsFiletypeXlsx } from 'react-icons/bs'
-import { FileDown } from 'lucide-react'
 
 interface ExportToExcelProps {
   data: any[]

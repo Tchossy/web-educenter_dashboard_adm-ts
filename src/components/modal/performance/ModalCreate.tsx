@@ -11,15 +11,10 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 
 // Services
-import uploadViewModel from '../../../services/ViewModel/uploadViewModel'
 import WeeklyAverageViewModel from '../../../services/ViewModel/WeeklyAverageViewModel'
-
-// Data
-import { genderOptions, statusOptions } from '../../../data/selectOption'
 
 // Component
 import { CustomInput } from '../../input/InputLabel'
-import { SelectCustomZod } from '../../selects/SelectCustomZod'
 
 // Style
 import { customStylesModalCenter } from '../../../styles/custom/modals'
@@ -33,7 +28,6 @@ import { StudentInterface } from '../../../interfaces/IStudentInterface'
 // Utils
 import { showToast } from '../../../utils/toasts'
 import { ToastContainer } from 'react-toastify'
-import ExamViewModel from '../../../services/ViewModel/ExamViewModel'
 import { ExamResultInterface } from '../../../interfaces/IExamResultInterface'
 import { TaskSubmissionInterface } from '../../../interfaces/ITaskSubmissionInterface'
 import { useParams } from 'react-router-dom'
@@ -41,7 +35,6 @@ import { WeeklyAverageInterface } from '../../../interfaces/IWeeklyAverageInterf
 import { calculateWeeklyAverage } from '../../../utils/calculateWeeklyAverage'
 import TaskSubmissionViewModel from '../../../services/ViewModel/TaskSubmissionViewModel'
 import ExamResultViewModel from '../../../services/ViewModel/ExamResultViewModel'
-import { converter } from '../../../utils/converter'
 
 const formSchema = z.object({
   week_start: z.string().refine(

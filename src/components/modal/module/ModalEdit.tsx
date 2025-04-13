@@ -18,7 +18,7 @@ import { ModuleInterface } from '../../../interfaces/IModuleInterface'
 // Type
 import { modalEditeType } from '../../../types/modal'
 // Data
-import { genderOptions, statusOptions } from '../../../data/selectOption'
+import { statusOptions } from '../../../data/selectOption'
 // Utils
 import { showToast } from '../../../utils/toasts'
 
@@ -72,7 +72,6 @@ export function ModalEditModule({
 }: modalEditeType<ModuleInterface>) {
   // State
   const [isSend, setIsSend] = useState<boolean>(false)
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
   const [rowsCourseData, setRowsCourseData] = useState<OptionType[]>([])
 

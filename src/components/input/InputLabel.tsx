@@ -28,7 +28,7 @@ export function CustomInput({
       <div className="w-full">
         <label
           htmlFor={htmlFor}
-          className="block mb-2 text-sm font-medium dark:text-light text-gray-400"
+          className="block mb-2 text-sm font-medium dark:text-light text-gray-400 whitespace-nowrap"
         >
           {label}
         </label>

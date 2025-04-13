@@ -7,7 +7,6 @@ import { useNavigate } from 'react-router-dom'
 // Icon
 import { FiEdit } from 'react-icons/fi'
 import { AiFillDelete } from 'react-icons/ai'
-import { Eye } from 'lucide-react'
 
 // Component
 import { BadgeAction } from '../badge/BadgeAction'
@@ -106,9 +105,9 @@ export const TableRowTask: React.FC<TableRowProps> = ({
   return (
     <motion.tr className="border-b dark:border-gray-700 hover:bg-gray-100/40 dark:hover:bg-gray-700/40 transition-all duration-300 cursor-pointer">
       <td className="px-3 py-3 min-w-[6rem]">#{rowItem.id}</td>
-      <td className="px-3 py-3 min-w-[6rem] max-w-[20rem]">
+      <td className="px-3 py-3 min-w-[16rem] max-w-[20rem]">
         <div className="flex flex-row justify-start items-center gap-2">
-          <div className="relative w-9 h-9 overflow-hidden">
+          <div className="relative w-9 min-w-9 h-9 overflow-hidden">
             <img
               className="w-full h-full object-cover rounded-full"
               src={rowItem.image}
@@ -122,10 +121,10 @@ export const TableRowTask: React.FC<TableRowProps> = ({
           </div>
         </div>
       </td>
-      <td className="px-3 py-3 min-w-[6rem] max-w-[20rem]">
+      <td className="px-3 py-3 min-w-[13rem] max-w-[20rem]">
         {rowsCourseData?.name}
       </td>
-      <td className="px-3 py-3 min-w-[6rem] max-w-[20rem]">
+      <td className="px-3 py-3 min-w-[13rem] max-w-[20rem]">
         {rowsModuleData?.name}
       </td>
       <td className="px-3 py-3 min-w-[6rem] max-w-[20rem]">
@@ -134,7 +133,7 @@ export const TableRowTask: React.FC<TableRowProps> = ({
       <td className="px-3 py-3 min-w-[6rem] max-w-[20rem]">
         <BadgeSimple color={colorStatus} label={labelStatus} />
       </td>
-      <td className="px-3 py-3 min-w-[6rem] max-w-[20rem]">
+      <td className="px-3 py-3 min-w-[10rem] max-w-[20rem]">
         {rowItem.due_date}
       </td>
 

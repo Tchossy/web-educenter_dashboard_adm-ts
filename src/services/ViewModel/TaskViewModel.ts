@@ -1,6 +1,7 @@
 import { TaskInterface } from '../../interfaces/ITaskInterface'
 import { ApiResponse } from '../../interfaces/IApiResponse'
 import ApiDAO from '../../modules/Api/Dao/ApiDAO'
+import { TaskQuestionInterface } from '../../interfaces/ITaskQuestionInterface'
 
 class TaskViewModel {
   public async create(data: any): Promise<ApiResponse<TaskInterface | null>> {
@@ -48,6 +49,35 @@ class TaskViewModel {
       return {
         error: false,
         msg: response.msg || 'Professor retrieved successfully',
+        data: response.data
+      }
+    } catch (error: any) {
+      return {
+        error: true,
+        msg: error.message,
+        data: null
+      }
+    }
+  }
+  public async getAllByTask(
+    id: string
+  ): Promise<ApiResponse<[TaskQuestionInterface] | null>> {
+    try {
+      const response = await ApiDAO.get<
+        ApiResponse<[TaskQuestionInterface] | null>
+      >(`/task/question/get/all/by/task/${id}`)
+
+      if (response.error) {
+        return {
+          error: true,
+          msg: response.msg || 'Unknown error occurred',
+          data: null
+        }
+      }
+
+      return {
+        error: false,
+        msg: response.msg,
         data: response.data
       }
     } catch (error: any) {

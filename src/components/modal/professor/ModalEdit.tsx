@@ -12,7 +12,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 
 // Services
-import uploadViewModel from '../../../services/ViewModel/uploadViewModel'
+import uploadViewModel from '../../../services/ViewModel/UploadViewModel'
 import ProfessorViewModel from '../../../services/ViewModel/ProfessorViewModel'
 // Interfaces
 import { ProfessorInterface } from '../../../interfaces/IProfessorInterface'
@@ -92,7 +92,6 @@ export function ModalEditProfessor({
   setModalEditRowIsOpen
 }: modalEditeType<ProfessorInterface>) {
   // Loading
-  const [uploading, setUploading] = useState<boolean>(false)
   const [isSend, setIsSend] = useState<boolean>(false)
 
   // State

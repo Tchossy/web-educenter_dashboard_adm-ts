@@ -6,19 +6,19 @@ import { MdOutlinePlaylistAdd } from 'react-icons/md'
 import { BeatLoader } from 'react-spinners'
 
 // Form
-import { useFieldArray, useForm } from 'react-hook-form'
+import { useFieldArray, useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 
 // Services
-import uploadViewModel from '../../../services/ViewModel/uploadViewModel'
+import uploadViewModel from '../../../services/ViewModel/UploadViewModel'
 import ExamViewModel from '../../../services/ViewModel/ExamViewModel'
 import CourseViewModel from '../../../services/ViewModel/CourseViewModel'
 import ModuleViewModel from '../../../services/ViewModel/ModuleViewModel'
 
 // Data
 import { routsNameMain } from '../../../data/routsName'
-import { statusExamOptions, statusOptions } from '../../../data/selectOption'
+import { statusExamOptions } from '../../../data/selectOption'
 
 // Component
 import { CustomInput } from '../../../components/input/InputLabel'
@@ -129,6 +129,9 @@ const formSchema = z.object({
               "Por favor, selecione uma opção válida: 'Resposta curta', 'Múltipla escolha' ou 'Upload de imagem'"
           }
         ),
+        question_answer: z.string({
+          required_error: 'A questão é obrigatória'
+        }),
         options: z
           .array(
             z.object({
@@ -138,8 +141,8 @@ const formSchema = z.object({
               is_valid: z.boolean()
             })
           )
-          .optional()
-        // image: z.string().optional()
+          .optional(),
+        question_image: z.instanceof(File).optional().or(z.string().optional())
       })
     )
     .optional()
@@ -158,14 +161,15 @@ export function ExamCreate() {
   const [isExameId, setIsExameId] = useState<string | null>(null)
 
   const [isSend, setIsSend] = useState<boolean>(false)
-  const [uploading, setUploading] = useState<boolean>(false)
 
   const [rowsCourseData, setRowsCourseData] = useState<OptionType[]>([])
   const [rowsModuleData, setRowsModuleData] = useState<OptionType[]>([])
 
   // Image
   const [selectedImageFile, setSelectedImageFile] = useState<string>('')
-  const [urlImageUploaded, setUrlImageUploaded] = useState<string | null>(null)
+  const [urlExamImageUploaded, setUrlExamImageUploaded] = useState<
+    string | null
+  >(null)
   const [imageSelect, setImageSelect] = useState<string>('')
 
   // Consts
@@ -193,11 +197,27 @@ export function ExamCreate() {
     name: 'questions'
   })
 
+  const watchedValues = useWatch({
+    control,
+    name: 'questions'
+  })
+
+  // const totalMark = fields.reduce((acc, field) => {
+  //   return acc + Number(field.value)
+  // }, 0)
+
+  const totalMark =
+    watchedValues?.reduce((acc, question) => {
+      const val = Number(question?.value)
+      return acc + (isNaN(val) ? 0 : val)
+    }, 0) || 0
+
   const addQuestion = () => {
     append({
       question: '',
       value: '1',
       question_type: 'short_answer',
+      question_answer: '',
       options: []
       // image: ''
     })
@@ -209,6 +229,7 @@ export function ExamCreate() {
     const photo = e.target.files[0]
     setSelectedImageFile(photo)
     setImageSelect(URL.createObjectURL(file))
+    console.log('file => ', file)
   }
 
   // Handle Select
@@ -221,13 +242,11 @@ export function ExamCreate() {
   }
 
   // Function Upload
-  async function handleUploadImage(): Promise<{
-    urlImage: string
+  async function handleUploadExamImage(): Promise<{
+    urlExamImage: string
     msgUpload: string
   }> {
     console.log('Uploading...')
-
-    setUploading(true)
 
     const formData = new FormData()
     formData.append('imageTask', selectedImageFile)
@@ -238,11 +257,34 @@ export function ExamCreate() {
       throw new Error(result.msg)
     }
 
-    const urlImage = result.url as string
+    const urlExamImage = result.url as string
     const msgUpload = result.msg as string
     return {
-      urlImage,
+      urlExamImage,
       msgUpload
+    }
+  }
+
+  async function handleUploadQuestionImage(file: any): Promise<{
+    urlQuestionImage: string
+    msgQuestionUpload: string
+  }> {
+    console.log('Uploading Question...')
+
+    const formData = new FormData()
+    formData.append('imageQuestion', file)
+
+    const result = await uploadViewModel.uploadQuestionImage(formData)
+
+    if (result.error) {
+      throw new Error(result.msg)
+    }
+
+    const urlQuestionImage = result.url as string
+    const msgQuestionUpload = result.msg as string
+    return {
+      urlQuestionImage,
+      msgQuestionUpload
     }
   }
 
@@ -251,17 +293,17 @@ export function ExamCreate() {
     setIsSend(true)
 
     try {
-      let urlImageToSave = urlImageUploaded ? urlImageUploaded : ''
+      let urlExamImageToSave = urlExamImageUploaded ? urlExamImageUploaded : ''
 
-      if (!urlImageUploaded) {
-        const resUrl = await handleUploadImage()
+      if (!urlExamImageUploaded) {
+        const resUrl = await handleUploadExamImage()
 
-        const { urlImage, msgUpload } = resUrl
-        urlImageToSave = urlImage
+        const { urlExamImage, msgUpload } = resUrl
+        urlExamImageToSave = urlExamImage
 
-        setUrlImageUploaded(urlImage)
+        setUrlExamImageUploaded(urlExamImage)
 
-        if (!urlImage) {
+        if (!urlExamImage) {
           showToastBottom('error', msgUpload)
           setIsSend(false)
           return
@@ -270,7 +312,7 @@ export function ExamCreate() {
 
       const dataToSave: ExamInterface = {
         ...dataForm,
-        image: urlImageToSave
+        image: urlExamImageToSave
       }
 
       if (!isCreated) {
@@ -288,14 +330,108 @@ export function ExamCreate() {
           setIsExameId(resultSubmit.data?.id as string)
 
           if (dataForm.questions.length !== 0) {
-            dataForm.questions.forEach(async (question: any) => {
+            dataForm.questions.forEach(
+              async (question: any, questionIndex: number) => {
+                // Upload Question image
+                // try {}
+                let urlQuestionImageToSave = ''
+
+                if (question.question_image) {
+                  const resQuestionUpload = await handleUploadQuestionImage(
+                    question.question_image
+                  )
+
+                  const { urlQuestionImage, msgQuestionUpload } =
+                    resQuestionUpload
+                  urlQuestionImageToSave = urlQuestionImage
+
+                  if (!urlQuestionImage) {
+                    showToastBottom(
+                      'error',
+                      `Pergunta ${questionIndex + 1} - ${msgQuestionUpload}`
+                    )
+                    setIsSend(false)
+                    return
+                  }
+                }
+
+                // Converte o array em uma string JSON
+                const optionsString = JSON.stringify(question.options)
+
+                const questionToSave: ExamQuestionInterface = {
+                  exam_id: resultSubmit.data?.id as string,
+                  question_text: question.question,
+                  question_type: question.question_type,
+                  question_answer: question.question_answer,
+                  question_image: urlQuestionImageToSave,
+
+                  options: optionsString as any,
+                  value: question.value
+                }
+
+                const resultQuestionSubmit = await ExamQuestionViewModel.create(
+                  questionToSave
+                )
+
+                if (resultQuestionSubmit.error) {
+                  showToastBottom('error', resultQuestionSubmit.msg)
+                  setIsSend(false)
+                } else {
+                  setTimeout(() => {
+                    reset()
+                    handleNavigation(routsNameMain.exam.index)
+                    setSelectedImageFile('')
+                    setUrlExamImageUploaded(null)
+                    setImageSelect('')
+                    setIsSend(false)
+                  }, 3000)
+                }
+
+                // console.log(questionToSave)
+              }
+            )
+          } else {
+            showToastBottom('error', 'Por favor crie as perguntas para o exame')
+          }
+        }
+      } else {
+        // alert('Esse exame já foi criado')
+
+        if (dataForm.questions.length !== 0) {
+          dataForm.questions.forEach(
+            async (question: any, questionIndex: number) => {
+              // Upload Question image
+              // try {}
+              let urlQuestionImageToSave = ''
+
+              if (question.question_image) {
+                const resQuestionUpload = await handleUploadQuestionImage(
+                  question.question_image
+                )
+
+                const { urlQuestionImage, msgQuestionUpload } =
+                  resQuestionUpload
+                urlQuestionImageToSave = urlQuestionImage
+
+                if (!urlQuestionImage) {
+                  showToastBottom(
+                    'error',
+                    `Pergunta ${questionIndex + 1} - ${msgQuestionUpload}`
+                  )
+                  setIsSend(false)
+                  return
+                }
+              }
+
               // Converte o array em uma string JSON
               const optionsString = JSON.stringify(question.options)
 
               const questionToSave: ExamQuestionInterface = {
-                exam_id: resultSubmit.data?.id as string,
+                exam_id: isExameId as string,
                 question_text: question.question,
                 question_type: question.question_type,
+                question_answer: question.question_answer,
+                question_image: urlQuestionImageToSave,
                 options: optionsString as any,
                 value: question.value
               }
@@ -308,56 +444,17 @@ export function ExamCreate() {
                 showToastBottom('error', resultQuestionSubmit.msg)
                 setIsSend(false)
               } else {
-                setTimeout(() => {
-                  reset()
-                  handleNavigation(routsNameMain.exam.index)
-                  setSelectedImageFile('')
-                  setUrlImageUploaded(null)
-                  setImageSelect('')
-                  setIsSend(false)
-                }, 3000)
+                showToastBottom('success', resultQuestionSubmit.msg)
               }
-
-              // console.log(questionToSave)
-            })
-          } else {
-            showToastBottom('error', 'Por favor crie as perguntas para o exame')
-          }
-        }
-      } else {
-        // alert('Esse exame já foi criado')
-
-        if (dataForm.questions.length !== 0) {
-          dataForm.questions.forEach(async (question: any) => {
-            // Converte o array em uma string JSON
-            const optionsString = JSON.stringify(question.options)
-
-            const questionToSave: ExamQuestionInterface = {
-              exam_id: isExameId as string,
-              question_text: question.question,
-              question_type: question.question_type,
-              options: optionsString as any,
-              value: question.value
+              console.log(questionToSave)
             }
-
-            const resultQuestionSubmit = await ExamQuestionViewModel.create(
-              questionToSave
-            )
-
-            if (resultQuestionSubmit.error) {
-              showToastBottom('error', resultQuestionSubmit.msg)
-              setIsSend(false)
-            } else {
-              showToastBottom('success', resultQuestionSubmit.msg)
-            }
-            // console.log(questionToSave)
-          })
+          )
 
           setTimeout(() => {
             reset()
             handleNavigation(routsNameMain.exam.index)
             setSelectedImageFile('')
-            setUrlImageUploaded(null)
+            setUrlExamImageUploaded(null)
             setImageSelect('')
             setIsCreated(false)
             setIsExameId(null)
@@ -372,6 +469,32 @@ export function ExamCreate() {
     } catch (error) {
       showToastBottom('error', String(error) as string)
       setIsSend(false)
+    }
+  }
+
+  async function handleSubmitForm2(dataForm: any) {
+    if (dataForm.questions && Array.isArray(dataForm.questions)) {
+      const questions = dataForm.questions.map(async (question: any) => {
+        let urlQuestionImageToSave = ''
+
+        if (question.question_image) {
+          const resUrl = await handleUploadQuestionImage(
+            question.question_image
+          )
+
+          const { urlQuestionImage, msgQuestionUpload } = resUrl
+          urlQuestionImageToSave = urlQuestionImage
+
+          console.log('URL da imagem da questão =>', urlQuestionImageToSave)
+
+          // if (!urlQuestionImage) {
+          //   showToastBottom('error', msgQuestionUpload)
+          //   setIsSend(false)
+          //   return
+          // } else {
+          // }
+        }
+      })
     }
   }
 
@@ -429,6 +552,15 @@ export function ExamCreate() {
   return (
     <div className="w-full h-full flex flex-col justify-start items-start gap-6">
       <ToastContainer />
+
+      {/* Float Counter */}
+      <div className="z-50 w-[16rem] flex flex-col justify-center items-center fixed top-24 right-6 py-4 px-6 rounded-md border-1 bg-dark shadow-4xl">
+        <span className="font-light text-xl text-white">Pontuação total: </span>
+
+        <span className="font-semibold text-2xl text-primary-200">
+          <h1>{totalMark}</h1>
+        </span>
+      </div>
 
       <div className="w-full flex flex-row items-center justify-between gap-2 ">
         <div className="w-full flex flex-col items-start justify-between gap-4">
@@ -592,7 +724,7 @@ export function ExamCreate() {
               <button
                 type="button"
                 onClick={addQuestion}
-                className="w-[16rem] h-[2.6rem] min-w-[12rem] px-4 py-2 rounded-lg bg-green-500 text-white hover:bg-green-600 active:bg-green-900 flex flex-row items-center justify-center gap-2 transition-all duration-300"
+                className="h-[2.6rem] max-w-[14rem] px-6 py-2 rounded-lg bg-green-500 text-white hover:bg-green-600 active:bg-green-900 flex flex-row items-center justify-center gap-2 transition-all duration-300"
               >
                 <MdOutlinePlaylistAdd className="text-2xl" />
                 Adicionar Pergunta
@@ -604,7 +736,7 @@ export function ExamCreate() {
               <button
                 disabled={isSend}
                 type="submit"
-                className="w-[16rem] h-[2.6rem] min-w-[12rem] px-3 rounded-lg bg-primary-200 text-white hover:bg-primary-500 active:bg-primary-700 flex flex-row items-center justify-center gap-2 transition-all duration-300 "
+                className="h-[2.6rem] max-w-[14rem] px-6 rounded-lg bg-primary-200 text-white hover:bg-primary-500 active:bg-primary-700 flex flex-row items-center justify-center gap-2 transition-all duration-300 "
               >
                 {isSend && (
                   <>

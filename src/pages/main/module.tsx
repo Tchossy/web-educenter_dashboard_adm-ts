@@ -5,7 +5,7 @@ import swal from 'sweetalert'
 import { IoSearchSharp } from 'react-icons/io5'
 
 // Icon
-import { FileDown, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
 
 // Data
 import { routsNameMain } from '../../data/routsName'
@@ -30,6 +30,7 @@ import { ModalSeeModule } from '../../components/modal/module/ModalSee'
 // Interface
 import { ModuleInterface } from '../../interfaces/IModuleInterface'
 import { showToast } from '../../utils/toasts'
+import { converter } from '../../utils/converter'
 
 export function Module() {
   // State
@@ -44,6 +45,7 @@ export function Module() {
 
   const [rowSelect, setRowSelect] = useState<any | null>(null)
   const [selectedValue, setSelectedValue] = useState('8')
+  // const [selectedFilterValue, setSelectedFilterValue] = useState('all')
 
   // Search
   const [termForSearch, setTermForSearch] = useState<string>('')
@@ -62,6 +64,12 @@ export function Module() {
     { label: namePageUppercase, to: routsNameMain.module },
     { label: 'Listagem' }
   ]
+
+  // const optionsRowFilterPage = [
+  //   { value: 'all', label: 'Todos' },
+  //   { value: 'active', label: 'Status - Inativo' },
+  //   { value: 'inactive', label: 'Status - Ativo' }
+  // ]
 
   const optionsRowPerPage = [
     { value: '8', label: '8' },
@@ -104,10 +112,35 @@ export function Module() {
       }
     })
   }
+  // Function
+  // async function fetchFilterData(filter: string) {
+  //   // Clear
+  //   setRowsData(null)
+
+  //   // Get
+  //   await ModuleViewModel.getAll().then(response => {
+  //     if (response.error) {
+  //       showToast('error', response.msg as string)
+  //     } else {
+  //       const arrayData = response.data as unknown as ModuleInterface[]
+  //       setTotalDocs(arrayData.length)
+
+  //       const filtered = arrayData.filter(newData => {
+  //         return newData.status === filter
+  //       })
+
+  //       setRowsData(filtered as ModuleInterface[])
+  //     }
+  //   })
+  // }
 
   // Get more data
   function fetchMoreData() {
-    fetchData(docsPerPage + docsPerPage)
+    const sumTotal =
+      converter.stringToNumber(docsPerPage) +
+      converter.stringToNumber(docsPerPage)
+    const str = converter.numberToString(sumTotal)
+    fetchData(str)
   }
 
   // Search data
@@ -162,9 +195,18 @@ export function Module() {
 
   // Change rows per page
   const handleSelectChange = (value: string) => {
+    setSelectedValue(value)
     setDocsPerPage(value)
     fetchData(value)
   }
+  // const handleSelectFilterChange = (value: string) => {
+  //   setSelectedFilterValue(value)
+  //   fetchFilterData(value)
+  // }
+
+  useEffect(() => {
+    fetchData(docsPerPage)
+  }, [])
 
   // Modal
   function openModalEditRow(item: any) {
@@ -178,10 +220,6 @@ export function Module() {
     setRowSelect(item)
     setModalSeeRowIsOpen(true)
   }
-
-  useEffect(() => {
-    fetchData(docsPerPage)
-  }, [])
 
   useEffect(() => {
     const newData = rowsData?.map(doc => ({
@@ -206,8 +244,8 @@ export function Module() {
           {namePageUppercase}
         </h1>
 
-        <div className="w-full flex flex-row items-center justify-between gap-2 ">
-          <div className="flex flex-row items-center justify-between gap-4">
+        <div className="w-full flex flex-row max-w-s-960:flex-col items-center max-w-s-960:items-start justify-between gap-2 ">
+          <div className="flex flex-row max-w-s-640:flex-col items-center max-w-s-640:items-start justify-between gap-4">
             <button
               onClick={openModalCreateRow}
               className="py-2 px-4 rounded-lg bg-primary-200 text-white hover:bg-primary-500 active:bg-primary-700 flex flex-row items-center justify-center gap-4 transition-all duration-300 "
@@ -218,9 +256,9 @@ export function Module() {
 
             <ExportToExcel
               data={dataToExport}
-              filename="modulo_data"
-              sheetName="Modulo"
-              titlePage="Lista de módulo"
+              filename="admin_data"
+              sheetName="Admin"
+              titlePage="Lista de admins"
               imageSrc="http://localhost:5173/logo.png"
               orientation="landscape"
               scale={0.8}
@@ -228,9 +266,18 @@ export function Module() {
           </div>
 
           <div className="w-full max-w-sm">
+            {/* <div className="flex flex-row justify-center items-center gap-4">
+              <SelectCustom
+                options={optionsRowFilterPage}
+                // selectedValue={selectedFilterValue}
+                onChange={handleSelectFilterChange}
+              />
+            </div> */}
+
             <InputWithButton
               onChange={e => setTermForSearch(e.target.value)}
               placeholder="Digite algo"
+              // buttonText="Enviar"
               icon={<IoSearchSharp size={20} />}
               onButtonClick={searchDocs}
             />
@@ -270,8 +317,8 @@ export function Module() {
             <tbody>{rowsTable}</tbody>
           </table>
 
-          <div className="pt-4 flex flex-row justify-between items-center gap-1">
-            <p className="text-xs flex flex-row justify-start items-center gap-1">
+          <div className="pt-4 flex flex-row max-w-s-960:flex-col justify-between items-center max-w-s-960:items-start gap-1 max-w-s-960:gap-3">
+            <p className="text-xs flex flex-row justify-start items-center gap-1 whitespace-nowrap">
               Mostrando
               <strong className="text-dark dark:text-light font-semibold">
                 {rowsData?.length !== undefined ? '1' : '0'}
@@ -287,20 +334,23 @@ export function Module() {
               {namePageUppercase}
             </p>
 
-            <div className="flex flex-row justify-center items-center gap-4 ">
-              <div className="flex flex-row justify-center items-center gap-4 ">
-                <span>Registos por página: </span>
-                <SelectCustom
-                  options={optionsRowPerPage}
-                  selectedValue={selectedValue}
-                  onChange={handleSelectChange}
-                />
+            <div className="flex flex-row justify-center items-center gap-4 mb-3 max-w-s-640:flex-wrap">
+              <div className="flex-1 flex flex-row justify-start items-center gap-4 max-w-s-520:flex-wrap">
+                <span className="">Registos por página: </span>
+
+                <span className="max-w-24">
+                  <SelectCustom
+                    options={optionsRowPerPage}
+                    selectedValue={selectedValue}
+                    onChange={handleSelectChange}
+                  />
+                </span>
               </div>
 
               <button
                 onClick={fetchMoreData}
                 type="submit"
-                className="sm:w-auto text-xs font-medium text-dark px-5 py-2.5 text-center flex flex-row justify-center items-center gap-2 bg-gray-50 rounded-lg  border border-gray-300 focus:ring-blue-500 focus:border-blue-500 w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-light dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                className="w-full sm:w-auto text-xs font-medium text-dark px-5 py-2.5 text-center flex flex-row justify-center items-center gap-2 bg-gray-50 rounded-lg  border border-gray-300 focus:ring-blue-500 focus:border-blue-500 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-light dark:focus:ring-blue-500 dark:focus:border-blue-500"
               >
                 <Plus size={16} /> Listar mais registos
               </button>

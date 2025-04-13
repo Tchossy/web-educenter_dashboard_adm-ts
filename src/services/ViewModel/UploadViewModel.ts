@@ -152,6 +152,36 @@ class UploadViewModel {
       }
     }
   }
+  public async uploadQuestionImage(
+    formData: FormData
+  ): Promise<ApiResponse<string | null>> {
+    try {
+      const response = await ApiDAO.post<ApiResponse<string | null>>(
+        '/upload/image/question',
+        formData
+      )
+
+      if (response.error) {
+        return {
+          error: true,
+          msg: response.msg || 'Error uploading image',
+          url: null
+        }
+      }
+
+      return {
+        error: false,
+        msg: 'Image uploaded successfully',
+        url: response.url
+      }
+    } catch (error: any) {
+      return {
+        error: true,
+        msg: error.message,
+        url: null
+      }
+    }
+  }
   public async uploadMaterialPdf(
     formData: FormData
   ): Promise<ApiResponse<string | null>> {

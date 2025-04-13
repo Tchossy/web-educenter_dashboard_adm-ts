@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { FiEdit } from 'react-icons/fi'
 import { AiFillDelete } from 'react-icons/ai'
 import { BadgeAction } from '../badge/BadgeAction'
 import { BadgeSimple } from '../badge/BadgeSimple'
 import { Eye, ListChecks } from 'lucide-react'
 import { TaskSubmissionInterface } from '../../interfaces/ITaskSubmissionInterface'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { routsNameMain } from '../../data/routsName'
 import { TaskInterface } from '../../interfaces/ITaskInterface'
 import TaskViewModel from '../../services/ViewModel/TaskViewModel'
@@ -80,8 +79,8 @@ export const TableRowTaskSubmission: React.FC<TableRowProps> = ({
   return (
     <motion.tr className="border-b dark:border-gray-700 hover:bg-gray-100/40 dark:hover:bg-gray-700/40 transition-all duration-300 cursor-pointer">
       <td className="px-3 py-3 min-w-[6rem]">#{rowItem.id}</td>
-      <td className="px-3 py-3 min-w-[6rem]">{rowsTaskData?.name}</td>
-      <td className="px-3 py-3 min-w-[6rem] max-w-[20rem]">
+      <td className="px-3 py-3 min-w-[12rem]">{rowsTaskData?.name}</td>
+      <td className="px-3 py-3 min-w-[12rem] max-w-[20rem]">
         {`${rowsStudentData?.first_name} ${rowsStudentData?.last_name}`}
       </td>
       <td className="px-3 py-3 min-w-[6rem] max-w-[20rem]">{rowItem.grade}</td>

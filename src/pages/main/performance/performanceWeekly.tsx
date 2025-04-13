@@ -19,7 +19,6 @@ import { TableRowWeeklyAverage } from '../../../components/table/TableRowWeeklyA
 // Components
 import { SelectCustom } from '../../../components/selects/SelectCustom'
 import { Breadcrumbs } from '../../../components/Breadcrumbs'
-import { InputWithButton } from '../../../components/input/InputWithButton'
 import ExportToExcel from '../../../components/ExportToExcel'
 
 // Modals
@@ -28,10 +27,11 @@ import { ModalCreateWeeklyAverage } from '../../../components/modal/performance/
 // Interface
 import { WeeklyAverageInterface } from '../../../interfaces/IWeeklyAverageInterface'
 // utils
-import { showToast } from '../../../utils/toasts'
+// import { showToast } from '../../../utils/toasts'
 // data
 import { StudentInterface } from '../../../interfaces/IStudentInterface'
 import StudentViewModel from '../../../services/ViewModel/StudentViewModel'
+import { converter } from '../../../utils/converter'
 
 export function PerformanceWeekly() {
   const { studentId } = useParams<{ studentId: string }>()
@@ -49,9 +49,6 @@ export function PerformanceWeekly() {
     useState<boolean>(false)
 
   const [selectedValue, setSelectedValue] = useState('8')
-
-  // Search
-  const [termForSearch, setTermForSearch] = useState<string>('')
 
   const [docsPerPage, setDocsPerPage] = useState<string>('8')
   const [totalDocs, setTotalDocs] = useState<number>(0)
@@ -96,7 +93,7 @@ export function PerformanceWeekly() {
     // Get
     await StudentViewModel.getOne(studentId as string).then(response => {
       if (response.error) {
-        showToast('error', response.msg as string)
+        console.error('error', response.msg as string)
       } else {
         const data = response.data as unknown as StudentInterface
 
@@ -114,7 +111,7 @@ export function PerformanceWeekly() {
     await WeeklyAverageViewModel.getAllByStudent(studentId as string).then(
       response => {
         if (response.error) {
-          showToast('error', response.msg as string)
+          console.error('error', response.msg as string)
         } else {
           const arrayData = response.data as unknown as WeeklyAverageInterface[]
           setTotalDocs(arrayData.length)
@@ -129,18 +126,11 @@ export function PerformanceWeekly() {
 
   // Get more data
   function fetchMoreData() {
-    fetchData(docsPerPage + docsPerPage)
-  }
-
-  // Search data
-  async function searchDocs() {
-    if (termForSearch == '') {
-      fetchData(docsPerPage)
-    } else {
-      WeeklyAverageViewModel.getAllByTermData(termForSearch).then(response => {
-        setRowsData(response.data as WeeklyAverageInterface[])
-      })
-    }
+    const sumTotal =
+      converter.stringToNumber(docsPerPage) +
+      converter.stringToNumber(docsPerPage)
+    const str = converter.numberToString(sumTotal)
+    fetchData(str)
   }
 
   // Update Listing
@@ -182,12 +172,13 @@ export function PerformanceWeekly() {
 
   // Change rows per page
   const handleSelectChange = (value: string) => {
+    setSelectedValue(value)
     setDocsPerPage(value)
     fetchData(value)
   }
 
   // Modal
-  function openModalCreateRow(item: any) {
+  function openModalCreateRow() {
     setModalCreateRowIsOpen(true)
   }
 
@@ -222,8 +213,8 @@ export function PerformanceWeekly() {
           {namePageUppercase}
         </h1>
 
-        <div className="w-full flex flex-row items-center justify-between gap-2 ">
-          <div className="flex flex-row items-center justify-between gap-4">
+        <div className="w-full flex flex-row max-w-s-960:flex-col items-center max-w-s-960:items-start justify-between gap-2 ">
+          <div className="flex flex-row max-w-s-640:flex-col items-center max-w-s-640:items-start justify-between gap-4">
             <button
               onClick={openModalCreateRow}
               className="py-2 px-4 rounded-lg bg-primary-200 text-white hover:bg-primary-500 active:bg-primary-700 flex flex-row items-center justify-center gap-4 transition-all duration-300 "
@@ -284,8 +275,8 @@ export function PerformanceWeekly() {
             <tbody>{rowsTable}</tbody>
           </table>
 
-          <div className="pt-4 flex flex-row justify-between items-center gap-1">
-            <p className="text-xs flex flex-row justify-start items-center gap-1">
+          <div className="pt-4 flex flex-row max-w-s-960:flex-col justify-between items-center max-w-s-960:items-start gap-1 max-w-s-960:gap-3">
+            <p className="text-xs flex flex-row justify-start items-center gap-1 whitespace-nowrap">
               Mostrando
               <strong className="text-dark dark:text-light font-semibold">
                 {rowsData?.length !== undefined ? '1' : '0'}
@@ -301,20 +292,23 @@ export function PerformanceWeekly() {
               {namePageUppercase}
             </p>
 
-            <div className="flex flex-row justify-center items-center gap-4 ">
-              <div className="flex flex-row justify-center items-center gap-4 ">
-                <span>Registos por página: </span>
-                <SelectCustom
-                  options={optionsRowPerPage}
-                  selectedValue={selectedValue}
-                  onChange={handleSelectChange}
-                />
+            <div className="flex flex-row justify-center items-center gap-4 mb-3 max-w-s-640:flex-wrap">
+              <div className="flex-1 flex flex-row justify-start items-center gap-4 max-w-s-520:flex-wrap">
+                <span className="">Registos por página: </span>
+
+                <span className="max-w-24">
+                  <SelectCustom
+                    options={optionsRowPerPage}
+                    selectedValue={selectedValue}
+                    onChange={handleSelectChange}
+                  />
+                </span>
               </div>
 
               <button
                 onClick={fetchMoreData}
                 type="submit"
-                className="sm:w-auto text-xs font-medium text-dark px-5 py-2.5 text-center flex flex-row justify-center items-center gap-2 bg-gray-50 rounded-lg  border border-gray-300 focus:ring-blue-500 focus:border-blue-500 w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-light dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                className="w-full sm:w-auto text-xs font-medium text-dark px-5 py-2.5 text-center flex flex-row justify-center items-center gap-2 bg-gray-50 rounded-lg  border border-gray-300 focus:ring-blue-500 focus:border-blue-500 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-light dark:focus:ring-blue-500 dark:focus:border-blue-500"
               >
                 <Plus size={16} /> Listar mais registos
               </button>

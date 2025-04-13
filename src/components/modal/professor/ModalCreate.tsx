@@ -11,7 +11,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 
 // Services
-import uploadViewModel from '../../../services/ViewModel/uploadViewModel'
+import uploadViewModel from '../../../services/ViewModel/UploadViewModel'
 import ProfessorViewModel from '../../../services/ViewModel/ProfessorViewModel'
 
 // Data
@@ -103,9 +103,8 @@ export function ModalCreateProfessor({
   handleUpdateListing,
   modalCreateRowIsOpen,
   setModalCreateRowIsOpen
-}: modalCreateType) {
+}: modalCreateType<ProfessorInterface>) {
   // Loading
-  const [uploading, setUploading] = useState<boolean>(false)
   const [isSend, setIsSend] = useState<boolean>(false)
 
   // Image
@@ -154,8 +153,6 @@ export function ModalCreateProfessor({
     msgUpload: string
   }> {
     console.log('Uploading photo...')
-
-    setUploading(true)
 
     const formData = new FormData()
     formData.append('imageProfessor', selectedFile)

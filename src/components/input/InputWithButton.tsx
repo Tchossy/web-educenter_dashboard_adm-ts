@@ -14,7 +14,7 @@ export function InputWithButton({
   ...inputProps
 }: InputWithButtonProps) {
   return (
-    <div className="w-full flex items-center border-[1px] bg-gray-100 dark:bg-gray-500/20 border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden ">
+    <div className="w-full flex items-center border-[1px] bg-gray-50 dark:bg-gray-500/20 border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden ">
       <input
         {...inputProps}
         type="text"

@@ -15,4 +15,9 @@ export type ExamQuestionType =
   | 'short_answer'
   | 'image_upload'
 
+export type TaskQuestionType =
+  | 'multiple_choice'
+  | 'short_answer'
+  | 'image_upload'
+
 export type MaterialType = 'video' | 'pdf'

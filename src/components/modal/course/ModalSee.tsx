@@ -1,5 +1,3 @@
-import { useState } from 'react'
-
 // Lib
 import Modal from 'react-modal'
 import { X } from 'lucide-react'
@@ -13,7 +11,7 @@ import { z } from 'zod'
 import { CustomInput } from '../../input/InputLabel'
 
 // Data
-import { genderOptions, statusOptions } from '../../../data/selectOption'
+import { statusOptions } from '../../../data/selectOption'
 
 // Style
 import { customStylesModalCenter } from '../../../styles/custom/modals'

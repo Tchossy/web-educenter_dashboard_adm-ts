@@ -1,4 +1,4 @@
-import React, { ChangeEvent } from 'react'
+import { ChangeEvent } from 'react'
 
 interface SelectProps {
   padding?: string
@@ -23,7 +23,7 @@ export function SelectCustom({
       id="countries"
       className={`sm:w-auto p-${
         padding ? padding : '2.5'
-      }  text-xs font-medium text-dark rounded-lg bg-gray-50 border border-gray-300 focus:ring-blue-500 focus:border-blue-500 block w-full dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500`}
+      }  text-xs font-medium text-dark rounded-lg bg-gray-50 border-[1px] border-gray-200 focus:ring-blue-500 focus:border-blue-500 block w-full dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500`}
       value={selectedValue}
       onChange={handleSelectChange}
     >

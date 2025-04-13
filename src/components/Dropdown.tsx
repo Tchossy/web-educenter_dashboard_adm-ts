@@ -1,4 +1,4 @@
-import React, { ElementType } from 'react'
+import { ElementType } from 'react'
 import { AiOutlinePlus } from 'react-icons/ai'
 
 interface DropdownItem {

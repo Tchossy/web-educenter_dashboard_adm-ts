@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -11,7 +11,7 @@ import { useAdminStore } from '../../stores/adminStore'
 import { useAdmin } from '../../hook/useAdmin'
 import { ToastContainer } from 'react-toastify'
 import { showToast } from '../../utils/toasts'
-import { AdminInterface } from '../../interfaces/IAdmin'
+import { BeatLoader } from 'react-spinners'
 
 const loginEmployeeSchema = z.object({
   email: z
@@ -120,6 +120,15 @@ export function Login() {
                 title="Efetuar login"
                 styleBtn="CircleHover"
               />
+            )}
+
+            {loading && (
+              <button
+                disabled={true}
+                className="w-full text-white bg-primary-200 hover:bg-primary-400 focus:ring-2 focus:outline-none focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-primary-500 dark:hover:bg-primary-200 dark:focus:ring-primary-bg-primary-400"
+              >
+                <BeatLoader color="white" size={10} />
+              </button>
             )}
           </form>
         </div>

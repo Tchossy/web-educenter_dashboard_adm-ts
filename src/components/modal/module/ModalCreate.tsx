@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react'
 // Lib
 import Modal from 'react-modal'
 import { X } from 'lucide-react'
-import { BeatLoader } from 'react-spinners'
 
 // Form
 import { useForm } from 'react-hook-form'
@@ -11,7 +10,6 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 
 // Services
-import uploadViewModel from '../../../services/ViewModel/uploadViewModel'
 import ModuleViewModel from '../../../services/ViewModel/ModuleViewModel'
 
 // Data
@@ -78,10 +76,6 @@ export function ModalCreateModule({
   const [isSend, setIsSend] = useState<boolean>(false)
 
   const [rowsCourseData, setRowsCourseData] = useState<OptionType[]>([])
-
-  // Image
-  const [selectedFile, setSelectedFile] = useState<string>('')
-  const [imagesSelect, setImagesSelect] = useState<string>('')
 
   // Const
   const namePageSingular = 'módulo'

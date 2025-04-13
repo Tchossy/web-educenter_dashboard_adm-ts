@@ -43,7 +43,7 @@ const TableRow: React.FC<TableRowProps> = ({
               alt="Rafael"
             />
           </div>
-          <div className="flex flex-col justify-center items-start">
+          <div className="flex flex-col justify-center items-start whitespace-nowrap">
             <span className="text-dark dark:text-light font-semibold text-sm">
               {rowItem.first_name + ' ' + rowItem.last_name}
             </span>

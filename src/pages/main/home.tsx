@@ -178,7 +178,7 @@ export function Home() {
         />
       </div>
 
-      <div className="w-full grid grid-cols-4 gap-6">
+      <div className="w-full grid grid-cols-4 max-w-s-1030:grid-cols-2 max-w-s-520:grid-cols-1 gap-6">
         {/* Professores */}
         <div className="w-full p-6 flex flex-col justify-start items-start gap-3 rounded-md bg-light dark:bg-dark shadow-3xl ">
           <span className="text-blue-600 ">
@@ -228,7 +228,7 @@ export function Home() {
         </div>
       </div>
 
-      <div className="w-full grid grid-cols-2 gap-6">
+      <div className="w-full grid grid-cols-2 max-w-s-1030:grid-cols-1 gap-6">
         <div className="w-full p-6 flex flex-col justify-start items-start gap-6 rounded-md bg-light dark:bg-dark">
           <h1 className="text-xl font-bold text-dark dark:text-light ">
             Listagem de tarefas recentes
