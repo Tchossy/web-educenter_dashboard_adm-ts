@@ -19,10 +19,10 @@ import { ToastContainer } from 'react-toastify'
 import { TaskSubmissionInterface } from '../../../interfaces/ITaskSubmissionInterface'
 import TaskSubmissionViewModel from '../../../services/ViewModel/TaskSubmissionViewModel'
 import { BeatLoader } from 'react-spinners'
-import { TextAreaLabelSimple } from '../../../components/input/TextAreaLabelSimple'
-import { ExamAnswerInterface } from '../../../interfaces/IExamAnswerInterface'
+import { TaskAnswerInterface } from '../../../interfaces/ITaskAnswerInterface'
 import TaskAnswerViewModel from '../../../services/ViewModel/TaskAnswerViewModel'
-import { ExamAnswers } from './components/ExamAnswers'
+import { TextAreaLabelSimple } from '../../../components/input/TextAreaLabelSimple'
+import { TaskAnswers } from './components/TaskAnswers'
 
 export function TaskCheck() {
   // Params
@@ -38,7 +38,7 @@ export function TaskCheck() {
   const [rowTaskData, setRowTaskData] = useState<TaskInterface | null>(null)
   const [rowTaskSubmissionData, setRowTaskSubmissionData] =
     useState<TaskSubmissionInterface | null>(null)
-  const [examAnswersData, setExamAnswersData] = useState<ExamAnswerInterface[]>(
+  const [taskAnswersData, setTaskAnswersData] = useState<TaskAnswerInterface[]>(
     []
   )
 
@@ -59,7 +59,7 @@ export function TaskCheck() {
   // List Array
   const itemsBreadcrumbs = [
     { label: 'Inicio', to: routsNameMain.home },
-    { label: namePageUppercase, to: routsNameMain.exam.index },
+    { label: namePageUppercase, to: routsNameMain.task.index },
     { label: 'Resultado' },
     { label: rowTaskData?.name as string }
   ]
@@ -126,10 +126,10 @@ export function TaskCheck() {
     )
 
     if (!response.error) {
-      const arrayData = response.data as unknown as ExamAnswerInterface[]
+      const arrayData = response.data as unknown as TaskAnswerInterface[]
       const listData = arrayData
 
-      setExamAnswersData(listData)
+      setTaskAnswersData(listData)
     } else {
       showToastBottom('error', response.msg)
     }
@@ -172,7 +172,7 @@ export function TaskCheck() {
                         </div>
                       </div>
 
-                      {/* Exam */}
+                      {/* Task */}
                       <div className="w-full flex flex-1 flex-row items-end gap-3">
                         <TextAreaLabelSimple
                           isDisabled={true}
@@ -192,7 +192,7 @@ export function TaskCheck() {
                           Questões
                         </label>
 
-                        <ExamAnswers examAnswersData={examAnswersData} />
+                        <TaskAnswers taskAnswersData={taskAnswersData} />
                       </div>
                     </div>
                   </div>

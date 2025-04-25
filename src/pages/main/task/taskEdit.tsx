@@ -383,6 +383,7 @@ export function TaskEdit() {
         const data = response.data as TaskQuestionInterface[]
 
         setTaskQuestions(data)
+        console.log('TaskQuestions => ', data)
       }
       setIsLoading(false)
     })
@@ -629,8 +630,8 @@ export function TaskEdit() {
                 {taskQuestions?.map(
                   (question: TaskQuestionInterface, index) => (
                     <TaskQuestionEditInput
-                      index={index + 1}
                       task_id={taskId as string}
+                      index={index + 1}
                       baseInfo={question}
                       handleDeleteRow={handleDeleteRow}
                     />

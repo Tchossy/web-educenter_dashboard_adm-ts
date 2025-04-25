@@ -87,9 +87,13 @@ export function TaskQuestionEditInput({
   )
   const [imagePreview, setImagePreview] = useState<string>('')
 
-  const optionsParse = baseInfo.options
-    ? JSON.parse(baseInfo.options as any)
-    : ''
+  const optionsParse = () => {
+    try {
+      return baseInfo.options ? JSON.parse(String(baseInfo.options)) : ''
+    } catch {
+      return ''
+    }
+  }
 
   const initialValues: formType = {
     // task_id: baseInfo.task_id,
@@ -336,7 +340,7 @@ export function TaskQuestionEditInput({
           {/* Renderizar opções múltiplas */}
           <MultipleChoiceOptions
             control={control}
-            options={optionsParse || []}
+            options={optionsParse() || []}
           />
         </div>
       )}
