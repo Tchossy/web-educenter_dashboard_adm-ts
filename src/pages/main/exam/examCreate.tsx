@@ -472,31 +472,31 @@ export function ExamCreate() {
     }
   }
 
-  async function handleSubmitForm2(dataForm: any) {
-    if (dataForm.questions && Array.isArray(dataForm.questions)) {
-      const questions = dataForm.questions.map(async (question: any) => {
-        let urlQuestionImageToSave = ''
+  // async function handleSubmitForm2(dataForm: any) {
+  //   if (dataForm.questions && Array.isArray(dataForm.questions)) {
+  //     const questions = dataForm.questions.map(async (question: any) => {
+  //       let urlQuestionImageToSave = ''
 
-        if (question.question_image) {
-          const resUrl = await handleUploadQuestionImage(
-            question.question_image
-          )
+  //       if (question.question_image) {
+  //         const resUrl = await handleUploadQuestionImage(
+  //           question.question_image
+  //         )
 
-          const { urlQuestionImage, msgQuestionUpload } = resUrl
-          urlQuestionImageToSave = urlQuestionImage
+  //         const { urlQuestionImage, msgQuestionUpload } = resUrl
+  //         urlQuestionImageToSave = urlQuestionImage
 
-          console.log('URL da imagem da questão =>', urlQuestionImageToSave)
+  //         console.log('URL da imagem da questão =>', urlQuestionImageToSave)
 
-          // if (!urlQuestionImage) {
-          //   showToastBottom('error', msgQuestionUpload)
-          //   setIsSend(false)
-          //   return
-          // } else {
-          // }
-        }
-      })
-    }
-  }
+  //         // if (!urlQuestionImage) {
+  //         //   showToastBottom('error', msgQuestionUpload)
+  //         //   setIsSend(false)
+  //         //   return
+  //         // } else {
+  //         // }
+  //       }
+  //     })
+  //   }
+  // }
 
   // Function Course
   async function fetchCourseData() {

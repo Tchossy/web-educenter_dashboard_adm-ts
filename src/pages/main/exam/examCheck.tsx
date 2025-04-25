@@ -277,9 +277,9 @@ export function ExamCheck() {
   // }
 
   // Função chamada quando as respostas forem atualizadas
-  const handleUpdatedAnswers = (updatedAnswers: ExamAnswerInterface[]) => {
-    setExamAnswersData(updatedAnswers)
-  }
+  // const handleUpdatedAnswers = (updatedAnswers: ExamAnswerInterface[]) => {
+  //   setExamAnswersData(updatedAnswers)
+  // }
 
   return (
     <div className="w-full h-full flex flex-col justify-start items-start gap-6">
@@ -396,7 +396,7 @@ export function ExamCheck() {
 
                   <ExamAnswers
                     examAnswersData={examAnswersData}
-                    onAnswersUpdate={handleUpdatedAnswers}
+                    // onAnswersUpdate={handleUpdatedAnswers}
                   />
                 </div>
                 {/* 

@@ -629,8 +629,8 @@ export function TaskEdit() {
                 {taskQuestions?.map(
                   (question: TaskQuestionInterface, index) => (
                     <TaskQuestionEditInput
-                      index={index + 1}
                       task_id={taskId as string}
+                      index={index + 1}
                       baseInfo={question}
                       handleDeleteRow={handleDeleteRow}
                     />

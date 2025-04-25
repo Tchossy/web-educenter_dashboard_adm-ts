@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { FiEdit } from 'react-icons/fi'
-import { AiFillDelete } from 'react-icons/ai'
 import { BadgeAction } from '../badge/BadgeAction'
 import { BadgeSimple } from '../badge/BadgeSimple'
 import { Eye } from 'lucide-react'
@@ -19,9 +17,7 @@ interface TableRowProps {
 
 const TableRowModule: React.FC<TableRowProps> = ({
   rowItem,
-  openModalSeeRow,
-  openModalEditRow,
-  handleDeleteRow
+  openModalSeeRow
 }) => {
   const [rowsCourseData, setRowsCourseData] = useState<CourseInterface | null>(
     null
@@ -63,21 +59,21 @@ const TableRowModule: React.FC<TableRowProps> = ({
       <td className="px-3 py-3 min-w-[6rem]">{rowItem.date_create}</td>
       <td className="px-3 py-3 min-w-[6rem]">
         <div className="flex gap-4">
-          <BadgeAction
+          {/* <BadgeAction
             color="green"
             icon={FiEdit}
             onclickBtn={() => openModalEditRow(rowItem)}
-          />
+          /> */}
           <BadgeAction
             color="blue"
             icon={Eye}
             onclickBtn={() => openModalSeeRow(rowItem)}
           />
-          <BadgeAction
+          {/* <BadgeAction
             color="red"
             icon={AiFillDelete}
             onclickBtn={() => handleDeleteRow(rowItem.id as string)}
-          />
+          /> */}
         </div>
       </td>
     </motion.tr>

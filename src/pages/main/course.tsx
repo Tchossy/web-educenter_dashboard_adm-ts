@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 
 // LIBS
-import swal from 'sweetalert'
 import { IoSearchSharp } from 'react-icons/io5'
 
 // Icon
@@ -55,7 +54,7 @@ export function Course() {
   // Consts
   const namePageUppercase = 'Cursos'
   const namePageLowercase = 'cursos'
-  const namePageSingular = 'curso'
+  // const namePageSingular = 'curso'
 
   // List Array
   const itemsBreadcrumbs = [
@@ -79,8 +78,6 @@ export function Course() {
         key={index}
         rowItem={item}
         openModalSeeRow={openModalSeeRow} // Substitua pelo seu código real
-        openModalEditRow={openModalEditRow} // Substitua pelo seu código real
-        handleDeleteRow={handleDeleteRow} // Substitua pelo seu código real
       />
     )
   })
@@ -131,40 +128,6 @@ export function Course() {
     fetchData(docsPerPage)
   }
 
-  // Delete row
-  function handleDeleteRow(id: string) {
-    swal({
-      title: 'Tem certeza?',
-      text: 'Uma vez excluído, você não poderá recuperar!',
-      buttons: ['Cancelar', 'Confirmar'],
-      icon: 'warning',
-      dangerMode: true
-    }).then(async willDelete => {
-      if (willDelete) {
-        await CourseViewModel.delete(id).then(response => {
-          console.log(response)
-
-          if (response.error) {
-            swal(`Erro ao deletar registo: ${response.msg}`, {
-              icon: 'error'
-            })
-            console.error('', response.msg)
-          } else {
-            swal('Deletado com sucesso', {
-              icon: 'success'
-            })
-
-            fetchData(docsPerPage)
-          }
-        })
-      } else {
-        swal('O registo está seguro!', {
-          icon: 'error'
-        })
-      }
-    })
-  }
-
   // Change rows per page
   const handleSelectChange = (value: string) => {
     setSelectedValue(value)
@@ -173,13 +136,6 @@ export function Course() {
   }
 
   // Modal
-  function openModalEditRow(item: any) {
-    setRowSelect(item)
-    setModalEditRowIsOpen(true)
-  }
-  function openModalCreateRow() {
-    setModalCreateRowIsOpen(true)
-  }
   function openModalSeeRow(item: any) {
     setRowSelect(item)
     setModalSeeRowIsOpen(true)
@@ -214,13 +170,13 @@ export function Course() {
 
         <div className="w-full flex flex-row max-w-s-960:flex-col items-center max-w-s-960:items-start justify-between gap-2 ">
           <div className="flex flex-row max-w-s-640:flex-col items-center max-w-s-640:items-start justify-between gap-4">
-            <button
+            {/* <button
               onClick={openModalCreateRow}
               className="py-2 px-4 rounded-lg bg-primary-200 text-white hover:bg-primary-500 active:bg-primary-700 flex flex-row items-center justify-center gap-4 transition-all duration-300 "
             >
               <Plus />
               Adicionar {namePageSingular}
-            </button>
+            </button> */}
 
             <ExportToExcel
               data={dataToExport}

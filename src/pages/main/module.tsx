@@ -56,7 +56,6 @@ export function Module() {
   // Consts
   const namePageUppercase = 'Módulos'
   const namePageLowercase = 'módulos'
-  const namePageSingular = 'módulo'
 
   // List Array
   const itemsBreadcrumbs = [
@@ -213,9 +212,7 @@ export function Module() {
     setRowSelect(item)
     setModalEditRowIsOpen(true)
   }
-  function openModalCreateRow() {
-    setModalCreateRowIsOpen(true)
-  }
+
   function openModalSeeRow(item: any) {
     setRowSelect(item)
     setModalSeeRowIsOpen(true)
@@ -246,13 +243,13 @@ export function Module() {
 
         <div className="w-full flex flex-row max-w-s-960:flex-col items-center max-w-s-960:items-start justify-between gap-2 ">
           <div className="flex flex-row max-w-s-640:flex-col items-center max-w-s-640:items-start justify-between gap-4">
-            <button
+            {/* <button
               onClick={openModalCreateRow}
               className="py-2 px-4 rounded-lg bg-primary-200 text-white hover:bg-primary-500 active:bg-primary-700 flex flex-row items-center justify-center gap-4 transition-all duration-300 "
             >
               <Plus />
               Adicionar {namePageSingular}
-            </button>
+            </button> */}
 
             <ExportToExcel
               data={dataToExport}

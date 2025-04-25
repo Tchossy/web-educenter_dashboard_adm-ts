@@ -1,45 +1,47 @@
 import { useEffect, useState } from 'react'
-import { ExamQuestionInterface } from '../../../../interfaces/IExamQuestionInterface'
-import ExamQuestionViewModel from '../../../../services/ViewModel/ExamQuestionViewModel'
-import { ExamAnswerInterface } from '../../../../interfaces/IExamAnswerInterface'
-import { ExamQuestionOptionType } from '../../../../types/option'
-import { convertToBoolean } from '../../../../utils/strings'
-import { ToastContainer } from 'react-toastify'
-import { TextAreaLabelSimple } from '../../../../components/input/TextAreaLabelSimple'
+// interfaces
+import { TaskAnswerInterface } from '../../../../interfaces/ITaskAnswerInterface'
+// components
 import { InputLabelSimple } from '../../../../components/input/InputLabelSimple'
+import { TextAreaLabelSimple } from '../../../../components/input/TextAreaLabelSimple'
+import { ToastContainer } from 'react-toastify'
+import TaskQuestionViewModel from '../../../../services/ViewModel/TaskQuestionViewModel'
+import { convertToBoolean } from '../../../../utils/strings'
+import { TaskQuestionOptionType } from '../../../../types/option'
+import { TaskQuestionInterface } from '../../../../interfaces/ITaskQuestionInterface'
 
 interface Props {
-  examAnswersData: ExamAnswerInterface[]
+  taskAnswersData: TaskAnswerInterface[]
 }
-interface ExamAnswerWithCorrect extends ExamAnswerInterface {
+interface TaskAnswerWithCorrect extends TaskAnswerInterface {
   correct_answer: string
-  incorrect_options?: ExamQuestionOptionType[]
+  incorrect_options?: TaskQuestionOptionType[]
 }
 
-export function ExamAnswers({ examAnswersData }: Props) {
-  const [updatedAnswers, setUpdatedAnswers] = useState<ExamAnswerWithCorrect[]>(
+export function TaskAnswers({ taskAnswersData }: Props) {
+  const [updatedAnswers, setUpdatedAnswers] = useState<TaskAnswerWithCorrect[]>(
     []
   )
 
-  // Atualiza o estado `updatedAnswers` sempre que `examAnswersData` for recebido
+  // Atualiza o estado `updatedAnswers` sempre que `taskAnswersData` for recebido
   useEffect(() => {
     // Function to get the question
     const fetchAnswersWithCorrectAnswers = async () => {
       const updated = await Promise.all(
-        examAnswersData.map(async answer => {
-          const response = await ExamQuestionViewModel.getOne(
+        taskAnswersData.map(async answer => {
+          const response = await TaskQuestionViewModel.getOne(
             answer.question_id
           )
 
           // console.log('fetchAnswersWithCorrectAnswers', response)
 
           const questionData = response?.data as
-            | ExamQuestionInterface
+            | TaskQuestionInterface
             | undefined
 
           // Tenta pegar a resposta correta da propriedade `question_answer`
           let correct_answer = ''
-          let incorrect_options: ExamQuestionOptionType[] = []
+          let incorrect_options: TaskQuestionOptionType[] = []
 
           if (questionData) {
             switch (questionData.question_type) {
@@ -53,7 +55,7 @@ export function ExamAnswers({ examAnswersData }: Props) {
               default:
                 if (questionData.options) {
                   try {
-                    const parsedOptions: ExamQuestionOptionType[] = JSON.parse(
+                    const parsedOptions: TaskQuestionOptionType[] = JSON.parse(
                       questionData.options as unknown as string
                     )
 
@@ -88,17 +90,29 @@ export function ExamAnswers({ examAnswersData }: Props) {
       setUpdatedAnswers(updated)
     }
 
-    if (examAnswersData.length > 0) {
+    if (taskAnswersData.length > 0) {
       fetchAnswersWithCorrectAnswers()
     }
-  }, [examAnswersData])
+  }, [taskAnswersData])
 
   return (
     <div className="w-full gap-4 p-4 border border-gray-300 dark:border-gray-600 rounded-md">
       <ToastContainer />
       {updatedAnswers.map((answer, answerIndex) => {
         const currentIndex = answerIndex + 1
+        // let isCorrect
 
+        // switch (answer.is_correct) {
+        //   case true:
+        //     isCorrect = 'border-green-400'
+        //     break
+        //   case false:
+        //     isCorrect = 'border-red-400'
+        //     break
+        //   default:
+        //     isCorrect = 'border-gray-600'
+        //     break
+        // }
         return (
           <div
             key={answer?.id}

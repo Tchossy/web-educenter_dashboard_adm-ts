@@ -2,7 +2,6 @@ import { useContext } from 'react'
 import { Link } from 'react-router-dom'
 import {
   LayoutDashboard,
-  Lock,
   GraduationCap,
   ChartNoAxesCombined,
   LibraryBig,
@@ -12,7 +11,6 @@ import {
   CalendarDays
 } from 'lucide-react'
 import { PiExamBold } from 'react-icons/pi'
-import { LiaChalkboardTeacherSolid } from 'react-icons/lia'
 import { FaRegFilePdf } from 'react-icons/fa6'
 import AccordionSidBar from '../accordion/AccordionSidBar'
 import { routsNameMain } from '../../data/routsName'
@@ -26,31 +24,6 @@ export const Slide = () => {
       label: 'Inicial',
       icon: <LayoutDashboard size={18} />,
       to: routsNameMain.home,
-      notification: 0,
-      accordion: false
-    },
-    {
-      label: 'Administradores',
-      icon: <Lock className="text-xs" size={18} />,
-      to: routsNameMain.admin,
-
-      // subMenus: [
-      //   {
-      //     label: 'statistic',
-      //     icon: <LayoutDashboard size={18} />,
-      //     to: routsNameMain.home,
-      //     notification: 0
-      //   }
-      // ],
-
-      notification: 0,
-      accordion: false
-    },
-    {
-      label: 'Professores',
-      icon: <LiaChalkboardTeacherSolid className="text-xs" size={18} />,
-      to: routsNameMain.professor,
-
       notification: 0,
       accordion: false
     },
