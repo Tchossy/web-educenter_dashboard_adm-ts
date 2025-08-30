@@ -14,7 +14,7 @@ interface Props {
   taskAnswersData: TaskAnswerInterface[]
 }
 interface TaskAnswerWithCorrect extends TaskAnswerInterface {
-  correct_answer: string
+  correct_answer: TaskQuestionOptionType[] | string
   incorrect_options?: TaskQuestionOptionType[]
 }
 
@@ -40,7 +40,8 @@ export function TaskAnswers({ taskAnswersData }: Props) {
             | undefined
 
           // Tenta pegar a resposta correta da propriedade `question_answer`
-          let correct_answer = ''
+          // let correct_answer = ''
+          let correct_answer: TaskQuestionOptionType[] | string = []
           let incorrect_options: TaskQuestionOptionType[] = []
 
           if (questionData) {
@@ -59,16 +60,20 @@ export function TaskAnswers({ taskAnswersData }: Props) {
                       questionData.options as unknown as string
                     )
 
-                    const correctOption = parsedOptions.find(
+                    correct_answer = parsedOptions.filter(
                       option => option.is_valid
                     )
                     incorrect_options = parsedOptions.filter(
                       option => !option.is_valid
                     )
 
-                    if (correctOption) {
-                      correct_answer = correctOption.text
-                    }
+                    // Pegara apenas 1 resposta correta
+                    // const correctOption = parsedOptions.find(
+                    //   option => option.is_valid
+                    // )
+                    // if (correctOption) {
+                    //   correct_answer = correctOption.text
+                    // }
                   } catch (error) {
                     console.error('Erro ao fazer parse das options:', error)
                   }
@@ -100,19 +105,6 @@ export function TaskAnswers({ taskAnswersData }: Props) {
       <ToastContainer />
       {updatedAnswers.map((answer, answerIndex) => {
         const currentIndex = answerIndex + 1
-        // let isCorrect
-
-        // switch (answer.is_correct) {
-        //   case true:
-        //     isCorrect = 'border-green-400'
-        //     break
-        //   case false:
-        //     isCorrect = 'border-red-400'
-        //     break
-        //   default:
-        //     isCorrect = 'border-gray-600'
-        //     break
-        // }
         return (
           <div
             key={answer?.id}
@@ -131,14 +123,46 @@ export function TaskAnswers({ taskAnswersData }: Props) {
             </div>
 
             <div className="flex flex-col gap-3 items-end">
-              <InputLabelSimple
-                isDisabled={true}
-                type="text"
-                htmlFor={`correct_answer_${answer?.id}`}
-                label={`Resposta correta`}
-                value={(answer.correct_answer as any) || 'Não disponível'}
-                onChange={() => null}
-              />
+              {/* map correct options */}
+              {Array.isArray(answer.correct_answer)
+                ? answer.correct_answer.length > 0 && (
+                    <div className="flex flex-col gap-1 text-sm">
+                      <p className="text-green-500 font-semibold">
+                        Opções corretas:
+                      </p>
+                      {answer.correct_answer.map((opt, idx) => (
+                        <InputLabelSimple
+                          key={idx}
+                          isDisabled={true}
+                          type="text"
+                          htmlFor={`correct_answer_${idx}`}
+                          label=""
+                          value={
+                            typeof opt === 'object' && 'text' in opt
+                              ? opt.text
+                              : 'Não disponível'
+                          }
+                          onChange={() => null}
+                        />
+                      ))}
+                    </div>
+                  )
+                : answer.correct_answer && (
+                    <div className="flex flex-col gap-1 text-sm">
+                      <p className="text-green-500 font-semibold">
+                        Resposta correta:
+                      </p>
+                      <InputLabelSimple
+                        isDisabled={true}
+                        type="text"
+                        htmlFor="correct_answer_single"
+                        label=""
+                        value={String(answer.correct_answer)}
+                        onChange={() => null}
+                      />
+                    </div>
+                  )}
+
               {/* map wrong options */}
               {answer.incorrect_options &&
                 answer.incorrect_options.length > 0 && (

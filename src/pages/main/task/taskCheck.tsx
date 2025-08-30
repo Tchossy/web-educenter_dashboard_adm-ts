@@ -155,7 +155,7 @@ export function TaskCheck() {
           </div>
 
           <div className="w-full h-full p-6 flex flex-col justify-start items-start gap-6 rounded-md bg-light dark:bg-dark">
-            <div className="w-full h-full flex gap-8 flex-row justify-start items-start">
+            <div className="w-full h-full flex gap-8 flex-row justify-start items-start max-w-s-1200:flex-col-reverse">
               {/* Left */}
               <div className="w-full p-6 flex flex-1 flex-col justify-center items-center gap-6">
                 <div className="w-full p-6 flex flex-col justify-start items-start gap-6 rounded-md bg-light dark:bg-dark">
@@ -200,7 +200,7 @@ export function TaskCheck() {
               </div>
 
               {/* Right */}
-              <div className="w-[26rem] px-2 flex flex-col items-start justify-start">
+              <div className="w-auto p-6 flex flex-col items-start justify-start">
                 <div className="flex flex-col gap-4 items-start justify-start">
                   <h1 className="flex flex-col mb-8 text-lg font-semibold dark:text-light text-gray-800">
                     Resultado da tarefa:

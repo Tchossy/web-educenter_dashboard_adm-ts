@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 // Lib
 import { ToastContainer } from 'react-toastify'
@@ -121,6 +121,8 @@ export function TaskEdit() {
   const [urlImageUploaded, setUrlImageUploaded] = useState<string | null>(null)
   const [imageSelect, setImageSelect] = useState<string>('')
 
+  const [totalMark, setTotalMark] = useState<number>(0)
+
   // Consts
   const namePageEntry = 'Editar tarefa'
   const namePageUppercase = 'Tarefas'
@@ -153,6 +155,18 @@ export function TaskEdit() {
     defaultValues: initialValues,
     resolver: zodResolver(formSchema)
   })
+
+  // Função para calcular o total
+  const calculateTotalMark = useCallback(
+    (questions: TaskQuestionInterface[] | null) => {
+      if (!questions) return 0
+      return questions.reduce(
+        (acc, question) => acc + Number(question.value || 0),
+        0
+      )
+    },
+    []
+  )
 
   // OnChange
   const onImageChange = (e: any) => {
@@ -389,6 +403,14 @@ export function TaskEdit() {
     })
   }
 
+  function handleValueChange(id: string, newValue: string) {
+    setTaskQuestions(prev => {
+      if (!prev) return prev // Se for null/undefined, só retorna
+
+      return prev.map(q => (q.id === id ? { ...q, value: newValue } : q))
+    })
+  }
+
   // Update Listing
   const handleUpdateListing = () => {
     fetchTaskQuestionData()
@@ -421,9 +443,25 @@ export function TaskEdit() {
     fetchCourseData()
   }, [])
 
+  // Atualize o total sempre que taskQuestions mudar
+  useEffect(() => {
+    const newTotal = calculateTotalMark(taskQuestions)
+
+    setTotalMark(newTotal)
+  }, [taskQuestions])
+
   return (
     <div className="w-full h-full flex flex-col justify-start items-start gap-6">
       <ToastContainer />
+
+      {/* Float Counter */}
+      <div className="z-50 w-[16rem] flex flex-col justify-center items-center fixed top-24 right-6 py-4 px-6 rounded-md border-1 bg-dark shadow-4xl">
+        <span className="font-light text-xl text-white">Pontuação total: </span>
+
+        <span className="font-semibold text-2xl text-primary-200">
+          <h1>{totalMark}</h1>
+        </span>
+      </div>
 
       {isLoading && (
         <>
@@ -634,6 +672,7 @@ export function TaskEdit() {
                       index={index + 1}
                       baseInfo={question}
                       handleDeleteRow={handleDeleteRow}
+                      onValueChange={handleValueChange}
                     />
                   )
                 )}

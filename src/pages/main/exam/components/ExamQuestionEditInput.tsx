@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 
 // Form
 import { z } from 'zod'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller } from 'react-hook-form'
 
@@ -69,13 +69,15 @@ type rowQuestionType<T> = {
   index: number
   baseInfo: T
   handleDeleteRow: (e: string) => void
+  onValueChange: (id: string, newValue: string) => void
 }
 
 export function ExamQuestionEditInput({
   exam_id,
   index,
   baseInfo,
-  handleDeleteRow
+  handleDeleteRow,
+  onValueChange
 }: rowQuestionType<ExamQuestionInterface>) {
   const [isSending, setIsSending] = useState<boolean>(false)
   const [questionType, setQuestionType] = useState<string>(
@@ -114,6 +116,15 @@ export function ExamQuestionEditInput({
     defaultValues: initialValues,
     resolver: zodResolver(formSchema)
   })
+
+  const watchedValue = useWatch({
+    control,
+    name: 'value'
+  })
+
+  useEffect(() => {
+    onValueChange(baseInfo.id as string, watchedValue)
+  }, [watchedValue])
 
   const handleQuestionTypeChange = (value: string) => {
     setQuestionType(value)

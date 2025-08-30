@@ -10,6 +10,7 @@ module.exports = {
       md: '768px',
       lg: '960px',
       xl: '1200px',
+      'min-w-s-1200': '1200px',
       'min-w-s-1390': '1390px',
       'min-w-s-1030': '1030px',
       'min-w-s-640': '640px',
@@ -17,6 +18,7 @@ module.exports = {
       'min-w-s-520': '520px',
 
       'max-w-s-1535': { max: '1535px' },
+      'max-w-s-1200': { max: '1200px' },
       'max-w-s-1030': { max: '1030px' },
       'max-w-s-960': { max: '960px' },
       'max-w-s-900': { max: '900px' },
