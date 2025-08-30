@@ -12,7 +12,7 @@ interface Props {
   examAnswersData: ExamAnswerInterface[]
 }
 interface ExamAnswerWithCorrect extends ExamAnswerInterface {
-  correct_answer: string
+  correct_answer: ExamQuestionOptionType[] | string
   incorrect_options?: ExamQuestionOptionType[]
 }
 
@@ -38,7 +38,8 @@ export function ExamAnswers({ examAnswersData }: Props) {
             | undefined
 
           // Tenta pegar a resposta correta da propriedade `question_answer`
-          let correct_answer = ''
+          // let correct_answer = ''
+          let correct_answer: ExamQuestionOptionType[] | string = []
           let incorrect_options: ExamQuestionOptionType[] = []
 
           if (questionData) {
@@ -57,16 +58,20 @@ export function ExamAnswers({ examAnswersData }: Props) {
                       questionData.options as unknown as string
                     )
 
-                    const correctOption = parsedOptions.find(
+                    correct_answer = parsedOptions.filter(
                       option => option.is_valid
                     )
                     incorrect_options = parsedOptions.filter(
                       option => !option.is_valid
                     )
 
-                    if (correctOption) {
-                      correct_answer = correctOption.text
-                    }
+                    // Pegara apenas 1 resposta correta
+                    // const correctOption = parsedOptions.find(
+                    //   option => option.is_valid
+                    // )
+                    // if (correctOption) {
+                    //   correct_answer = correctOption.text
+                    // }
                   } catch (error) {
                     console.error('Erro ao fazer parse das options:', error)
                   }
@@ -117,14 +122,45 @@ export function ExamAnswers({ examAnswersData }: Props) {
             </div>
 
             <div className="flex flex-col gap-3 items-end">
-              <InputLabelSimple
-                isDisabled={true}
-                type="text"
-                htmlFor={`correct_answer_${answer?.id}`}
-                label={`Resposta correta`}
-                value={(answer.correct_answer as any) || 'Não disponível'}
-                onChange={() => null}
-              />
+              {/* map correct options */}
+              {Array.isArray(answer.correct_answer)
+                ? answer.correct_answer.length > 0 && (
+                    <div className="flex flex-col gap-1 text-sm">
+                      <p className="text-green-500 font-semibold">
+                        Opções corretas:
+                      </p>
+                      {answer.correct_answer.map((opt, idx) => (
+                        <InputLabelSimple
+                          key={idx}
+                          isDisabled={true}
+                          type="text"
+                          htmlFor={`correct_answer_${idx}`}
+                          label=""
+                          value={
+                            typeof opt === 'object' && 'text' in opt
+                              ? opt.text
+                              : 'Não disponível'
+                          }
+                          onChange={() => null}
+                        />
+                      ))}
+                    </div>
+                  )
+                : answer.correct_answer && (
+                    <div className="flex flex-col gap-1 text-sm">
+                      <p className="text-green-500 font-semibold">
+                        Resposta correta:
+                      </p>
+                      <InputLabelSimple
+                        isDisabled={true}
+                        type="text"
+                        htmlFor="correct_answer_single"
+                        label=""
+                        value={String(answer.correct_answer)}
+                        onChange={() => null}
+                      />
+                    </div>
+                  )}
               {/* map wrong options */}
               {answer.incorrect_options &&
                 answer.incorrect_options.length > 0 && (
@@ -136,7 +172,7 @@ export function ExamAnswers({ examAnswersData }: Props) {
                       <InputLabelSimple
                         isDisabled={true}
                         type="text"
-                        htmlFor={`correct_answer_${idx}`}
+                        htmlFor={`incorrect_options_${idx}`}
                         label={``}
                         value={(opt.text as any) || 'Não disponível'}
                         onChange={() => null}

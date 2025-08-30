@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 // Lib
 import { ToastContainer } from 'react-toastify'
@@ -125,6 +125,8 @@ export function ExamEdit() {
   const [rowsCourseData, setRowsCourseData] = useState<OptionType[]>([])
   const [rowsModuleData, setRowsModuleData] = useState<OptionType[]>([])
 
+  const [totalMark, setTotalMark] = useState<number>(0)
+
   // Modal
   const [modalCreateRowIsOpen, setModalCreateRowIsOpen] =
     useState<boolean>(false)
@@ -168,6 +170,18 @@ export function ExamEdit() {
     defaultValues: initialValues,
     resolver: zodResolver(formSchema)
   })
+
+  // Função para calcular o total
+  const calculateTotalMark = useCallback(
+    (questions: ExamQuestionInterface[] | null) => {
+      if (!questions) return 0
+      return questions.reduce(
+        (acc, question) => acc + Number(question.value || 0),
+        0
+      )
+    },
+    []
+  )
 
   // OnChange
   const onImageChange = (e: any) => {
@@ -393,6 +407,14 @@ export function ExamEdit() {
     fetchExamQuestionData()
   }
 
+  function handleValueChange(id: string, newValue: string) {
+    setExamQuestions(prev => {
+      if (!prev) return prev // Se for null/undefined, só retorna
+
+      return prev.map(q => (q.id === id ? { ...q, value: newValue } : q))
+    })
+  }
+
   useEffect(() => {
     if (baseInfo) {
       reset({
@@ -422,9 +444,25 @@ export function ExamEdit() {
     fetchCourseData()
   }, [])
 
+  // Atualize o total sempre que examQuestions mudar
+  useEffect(() => {
+    const newTotal = calculateTotalMark(examQuestions)
+
+    setTotalMark(newTotal)
+  }, [examQuestions])
+
   return (
     <div className="w-full h-full flex flex-col justify-start items-start gap-6">
       <ToastContainer />
+
+      {/* Float Counter */}
+      <div className="z-50 w-[16rem] flex flex-col justify-center items-center fixed top-24 right-6 py-4 px-6 rounded-md border-1 bg-dark shadow-4xl">
+        <span className="font-light text-xl text-white">Pontuação total: </span>
+
+        <span className="font-semibold text-2xl text-primary-200">
+          <h1>{totalMark}</h1>
+        </span>
+      </div>
 
       {isLoading && (
         <>
@@ -598,13 +636,14 @@ export function ExamEdit() {
                     type="submit"
                     className="w-[16rem] h-[2.6rem] min-w-[12rem] px-3 rounded-lg bg-primary-200 text-white hover:bg-primary-500 active:bg-primary-700 flex flex-row items-center justify-center gap-2 transition-all duration-300 "
                   >
-                    {isSending && (
-                      <>
+                    {isSending ? (
+                      <div className="flex items-center gap-2">
                         <BeatLoader color="white" size={10} />
-                      </>
+                        <span>Salvando...</span>
+                      </div>
+                    ) : (
+                      'Salvar alterações'
                     )}
-
-                    {!isSending && <span>Salvar alterações</span>}
                   </button>
                 </div>
               </form>
@@ -612,15 +651,23 @@ export function ExamEdit() {
               <div className="w-full flex flex-col gap-4">
                 <h3 className="text-xl font-semibold">Perguntas do exame</h3>
                 {/* Question Exam Start */}
-                {examQuestions?.map(
-                  (question: ExamQuestionInterface, index) => (
-                    <ExamQuestionEditInput
-                      index={index + 1}
-                      exam_id={examId as string}
-                      baseInfo={question}
-                      handleDeleteRow={handleDeleteRow}
-                    />
+                {examQuestions && examQuestions.length > 0 ? (
+                  examQuestions?.map(
+                    (question: ExamQuestionInterface, index) => (
+                      <ExamQuestionEditInput
+                        index={index + 1}
+                        exam_id={examId as string}
+                        baseInfo={question}
+                        handleDeleteRow={handleDeleteRow}
+                        // onUpdate={handleQuestionUpdated}
+                        onValueChange={handleValueChange}
+                      />
+                    )
                   )
+                ) : (
+                  <div className="w-full flex items-center justify-center p-6 text-gray-500">
+                    Nenhuma questão cadastrada ainda.
+                  </div>
                 )}
                 {/* Question ExamEnd */}
 
