@@ -44,7 +44,7 @@ class AdminViewModel {
 
     try {
       const response = await ApiDAO.post<ApiResponse<AdminInterface | null>>(
-        '/admin/login',
+        '/professor/login',
         data
       )
 
@@ -58,7 +58,7 @@ class AdminViewModel {
 
       return {
         error: false,
-        msg: response.msg || 'Admin created successfully',
+        msg: response.msg || 'Professor logged successfully',
         data: response.data
       }
     } catch (error: any) {

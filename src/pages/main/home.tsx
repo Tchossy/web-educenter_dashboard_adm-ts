@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 
 // Icon
 import { GraduationCap, LibraryBig, BookMarked } from 'lucide-react'
-import { LiaChalkboardTeacherSolid } from 'react-icons/lia'
 // Component
 import { TableRowExamLittle } from '../../components/table/TableRowExamLittle'
 import { TableRowTaskLittle } from '../../components/table/TableRowTaskLittle'
@@ -15,19 +14,13 @@ import { getGreeting, getGreetingMsg } from '../../utils/getGreeting'
 import { ExamInterface } from '../../interfaces/IExamInterface'
 import { TaskInterface } from '../../interfaces/ITaskInterface'
 import { StudentInterface } from '../../interfaces/IStudentInterface'
-import { ProfessorInterface } from '../../interfaces/IProfessorInterface'
 import ExamViewModel from '../../services/ViewModel/ExamViewModel'
 import TaskViewModel from '../../services/ViewModel/TaskViewModel'
-import ProfessorViewModel from '../../services/ViewModel/ProfessorViewModel'
 import StudentViewModel from '../../services/ViewModel/StudentViewModel'
 
 export function Home() {
   const { currentAdminData } = useAdminStore()
 
-  // Professor data
-  const [rowsDataProfessors, setRowsDataProfessors] = useState<
-    ProfessorInterface[] | null
-  >(null)
   // Student data
   const [rowsDataStudents, setRowsDataStudents] = useState<
     StudentInterface[] | null
@@ -53,22 +46,6 @@ export function Home() {
     return <TableRowTaskLittle key={index} rowItem={item} />
   })
 
-  async function fetchDataProfessor() {
-    // Clear
-    setRowsDataProfessors(null)
-
-    // Get
-    await ProfessorViewModel.getAll().then(response => {
-      if (response.error) {
-        console.error('error: ', response.msg as string)
-      } else {
-        const arrayData = response.data as ProfessorInterface[]
-
-        // Definir a lista completa de exames
-        setRowsDataProfessors(arrayData as ProfessorInterface[])
-      }
-    })
-  }
   async function fetchDataStudent() {
     // Clear
     setRowsDataStudents(null)
@@ -137,8 +114,6 @@ export function Home() {
   }
 
   useEffect(() => {
-    // Professor
-    fetchDataProfessor()
     // Student
     fetchDataStudent()
     // Exam
@@ -156,7 +131,7 @@ export function Home() {
           <span className="text-2xl font-semibold ">
             {getGreeting()},{' '}
             <span className="text-primary-200 ">
-              Sr{currentAdminData?.gender == 'male' ? '' : '(a)'} .{' '}
+              Professor{currentAdminData?.gender == 'male' ? '' : '(a)'}{' '}
               {currentAdminData?.first_name} {currentAdminData?.last_name}
             </span>
           </span>
@@ -180,7 +155,7 @@ export function Home() {
 
       <div className="w-full grid grid-cols-4 max-w-s-1030:grid-cols-2 max-w-s-520:grid-cols-1 gap-6">
         {/* Professores */}
-        <div className="w-full p-6 flex flex-col justify-start items-start gap-3 rounded-md bg-light dark:bg-dark shadow-3xl ">
+        {/* <div className="w-full p-6 flex flex-col justify-start items-start gap-3 rounded-md bg-light dark:bg-dark shadow-3xl ">
           <span className="text-blue-600 ">
             <LiaChalkboardTeacherSolid size={36} />
           </span>
@@ -188,7 +163,7 @@ export function Home() {
           <span className="text-3xl font-semibold ">
             {rowsDataProfessors?.length}{' '}
           </span>
-        </div>
+        </div> */}
 
         {/* Estudantes */}
         <div className="w-full p-6 flex flex-col justify-start items-start gap-3 rounded-md bg-light dark:bg-dark shadow-3xl ">

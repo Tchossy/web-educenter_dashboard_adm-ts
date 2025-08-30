@@ -1,7 +1,5 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { FiEdit } from 'react-icons/fi'
-import { AiFillDelete } from 'react-icons/ai'
 import { BadgeAction } from '../badge/BadgeAction'
 import { BadgeSimple } from '../badge/BadgeSimple'
 import { Eye } from 'lucide-react'
@@ -9,16 +7,12 @@ import { CourseInterface } from '../../interfaces/ICourseInterface'
 
 interface TableRowProps {
   rowItem: CourseInterface
-  handleDeleteRow: (action: string) => void
   openModalSeeRow: (action: any) => void
-  openModalEditRow: (action: any) => void
 }
 
 const TableRowCourse: React.FC<TableRowProps> = ({
   rowItem,
-  openModalSeeRow,
-  openModalEditRow,
-  handleDeleteRow
+  openModalSeeRow
 }) => {
   const labelStatus = rowItem.status == 'active' ? 'Ativo' : 'Inativo'
 
@@ -55,21 +49,21 @@ const TableRowCourse: React.FC<TableRowProps> = ({
       </td>
       <td className="px-3 py-3 min-w-[6rem]">
         <div className="flex flex-row justify-start items-center gap-4">
-          <BadgeAction
+          {/* <BadgeAction
             color="green"
             icon={FiEdit}
             onclickBtn={() => openModalEditRow(rowItem)}
-          />
+          /> */}
           <BadgeAction
             color="blue"
             icon={Eye}
             onclickBtn={() => openModalSeeRow(rowItem)}
           />
-          <BadgeAction
+          {/* <BadgeAction
             color="red"
             icon={AiFillDelete}
             onclickBtn={() => handleDeleteRow(rowItem.id as string)}
-          />
+          /> */}
         </div>
       </td>
     </motion.tr>

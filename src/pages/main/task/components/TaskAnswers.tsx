@@ -105,6 +105,22 @@ export function TaskAnswers({ taskAnswersData }: Props) {
       <ToastContainer />
       {updatedAnswers.map((answer, answerIndex) => {
         const currentIndex = answerIndex + 1
+<<<<<<< HEAD
+=======
+        // let isCorrect
+
+        // switch (answer.is_correct) {
+        //   case true:
+        //     isCorrect = 'border-green-400'
+        //     break
+        //   case false:
+        //     isCorrect = 'border-red-400'
+        //     break
+        //   default:
+        //     isCorrect = 'border-gray-600'
+        //     break
+        // }
+>>>>>>> 0ec4261eb14c46dd7d604f4e6e908fffb202c3e7
         return (
           <div
             key={answer?.id}
